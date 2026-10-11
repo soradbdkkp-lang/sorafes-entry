@@ -49,25 +49,31 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
   };
   const run = async (payload: Record<string, unknown>, sending = false) => {
     if (busy.current) return;
+    const recovering = payload.action === 'recover';
+    if (recovering) pending.current = payload;
+    const unresolved = (detail = '') => {
+      setState('unknown'); block(true);
+      setMessage(`${detail}保存結果はまだ確定できません。入力を変えず、同じ操作IDで保存結果を再確認してください。`);
+    };
     busy.current = true; setState('busy'); block(true); setMessage('確認中です。');
     try {
       const request = productionUi || googleMode ? payload : { ...payload, fault: sending ? fault : '' };
       const r = await call(request, googleMode, duplicateMode, productionMode, appsScriptMode);
       if (!r.ok) {
-        if (sending && r.code === 'UNKNOWN') { setState('unknown'); setMessage('保存結果を確認できません。入力を変えず、同じ操作IDで保存結果を再確認してください。'); return; }
+        if (recovering || (sending && r.code === 'UNKNOWN')) { unresolved(r.code === 'CLOSED' ? '現在、応募受付は停止しています。' : r.code === 'DENIED' ? '認証できませんでした。保存票のID・コードを確認し、運営へご相談ください。' : ''); return; }
         setState('idle'); block(false); pending.current = null;
         setMessage(r.code === 'CLOSED' ? '現在、応募受付は停止しています。入力内容は保持されています。' : r.code === 'DENIED' ? '認証できませんでした。受付番号・編集コードを確認してください。' : duplicateMode && r.code === 'DUPLICATE' ? 'このプレイヤーはすでにエントリーされています。保存を保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。' : duplicateMode && r.code === 'POSSIBLE_DUPLICATE' ? '重複の可能性があります。入力内容を確認してください。保存は保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。本人でない場合は運営Xアカウントへご相談ください。' : duplicateMode && r.code === 'PENDING' ? '重複候補の保存処理が未確定です。処理の確認後に再試行してください。' : r.code === 'CONFLICT' ? 'ほかの更新が先に確定しています。応募を読み直してから修正してください。' : r.code === 'BUSY' ? '現在アクセスが集中しています。時間をおいて同じ内容で再試行してください。' : r.code === 'INVALID' ? '送信内容を確認できませんでした。入力内容を見直してください。' : r.code === 'CONFIG' ? '受付設定を確認できません。運営へご連絡ください。' : `操作を完了できませんでした（${r.code}）。`); return;
       }
       setReceipt(String(r.receipt));
-      if (r.status === 'pending') { setState('idle'); block(false); setMessage('保存処理は途中です。元の画面で同じ操作を再送してください。再読み込み後の途中保存復旧は、この試作では未対応です。'); return; }
+      if (r.status === 'pending') { unresolved('保存処理は途中です。'); return; }
       if (payload.action === 'read') { load(r.draft as Draft); setLoaded({ receipt: String(r.receipt), version: Number(r.version) }); newId.current = crypto.randomUUID(); setRecoveryId(newId.current); setSaved(false); setState('idle'); setMessage('応募を読み込みました。今回の更新用の再確認IDを手元へ保存し、内容を修正してください。'); }
       else {
-        setState(sending ? 'done' : 'idle'); setLoaded(null);
-        if (productionMode && sending) complete?.({ receipt: String(r.receipt), editCode: code, recoveryId, updated: payload.action === 'update' });
+        setState(sending || recovering ? 'done' : 'idle'); setLoaded(null);
+        if (productionMode && (sending || recovering)) complete?.({ receipt: String(r.receipt), editCode: String(payload.editCode), recoveryId: String(payload.requestId), updated: payload.action === 'update' || (recovering && Number(r.version) > 1) });
         setMessage(productionMode ? `応募を${payload.action === 'update' ? '更新' : '受け付け'}ました。受付番号：${r.receipt}。受付番号を含む保存票をダウンロードし、大切に保管してください。` : `${productionPreview ? '公開前ローカル' : googleMode ? 'Google試験' : phase5Mode ? 'Phase 5ローカル試験' : 'ローカル'}保存確認：${r.receipt} / 版${r.version}。正式な受付ではありません。続けて編集する場合は応募を読み込んでください。`);
       }
       pending.current = null; block(false);
-    } catch { setState(sending ? 'unknown' : 'idle'); block(sending); setMessage('保存結果を確認できません。入力を変えず、同じ操作IDで保存結果を再確認してください。'); }
+    } catch { if (sending || recovering) unresolved(); else { setState('idle'); block(false); setMessage('保存結果を確認できません。入力を変えず、同じ操作IDで保存結果を再確認してください。'); } }
     finally { busy.current = false; }
   };
   const submit = () => {
@@ -100,7 +106,8 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
       <label className="check"><input type="checkbox" checked={saved} onChange={e => setSaved(e.target.checked)} />{productionUi ? '編集コードと再確認IDを手元に保存し、応募情報が運営アカウント限定で保存され、修正前を含め削除されないことを確認しました。' : <>全員の情報が架空で、コードと再確認IDを手元に保存しました。{googleMode && '保存情報を削除しないこと・応募一覧のリンク閲覧も確認しました。'}</>}</label>
     </fieldset>
     {!googleMode && !productionUi && <label className="field"><span>失敗試験（ローカル専用）</span><select value={fault} disabled={state === 'busy'} onChange={e => setFault(e.target.value)}><option value="">正常</option><option value="auth">準備保存前に失敗</option><option value="history">履歴保存前に失敗</option><option value="shared">共有表示への反映前に失敗</option><option value="commit">確定記録前に失敗</option><option value="response">保存成功後に応答切断</option></select></label>}
-    {ready && <button className="primary" type="button" disabled={!saved || !code || !recoveryId || !deadline || duplicatePairs.length > 0 || state === 'busy' || state === 'done'} onClick={submit}>{state === 'unknown' ? '同じ操作を再確認' : productionMode ? loaded ? '応募内容を更新' : '応募を送信' : productionPreview ? loaded ? '応募内容を更新（ローカル確認）' : '応募を送信（ローカル確認）' : loaded ? '試験応募を更新' : googleMode ? 'Googleへ試験応募' : 'ローカルへ試験応募'}</button>}
+    {state === 'unknown' && <button className="primary" type="button" onClick={() => { if (pending.current) void run(pending.current, pending.current.action !== 'recover'); }}>同じ操作を再確認</button>}
+    {ready && state !== 'unknown' && <button className="primary" type="button" disabled={!saved || !code || !recoveryId || !deadline || duplicatePairs.length > 0 || state === 'busy' || state === 'done'} onClick={submit}>{productionMode ? loaded ? '応募内容を更新' : '応募を送信' : productionPreview ? loaded ? '応募内容を更新（ローカル確認）' : '応募を送信（ローカル確認）' : loaded ? '試験応募を更新' : googleMode ? 'Googleへ試験応募' : 'ローカルへ試験応募'}</button>}
     <button className="secondary" type="button" disabled={locked} onClick={() => { setCode(''); setSaved(false); setLoaded(null); setReceipt(''); setRecoveryId(''); newId.current = ''; pending.current = null; setState('idle'); setMessage('画面内の認証情報を破棄しました。保存済み応募は削除していません。'); }}>編集・認証を終了</button>
     {message && <p role="status">{message}</p>}<p className="hint">{productionMode ? 'コードを紛失した場合は運営Xアカウントへ相談してください。自動再発行は行いません。' : productionPreview ? '公開前のローカル確認のため、この画面から実応募は送信されません。コード紛失時は運営Xアカウントへ相談してください。' : phase5Mode ? '重複チェックは架空データのローカル試験です。実応募の照合・紛失時の再発行には対応しません。' : '重複応募防止・紛失時の再発行は未実装です。'}結果不明の間は入力を変更できません。</p>
   </section>;

@@ -1,0 +1,26 @@
+# 回復UIの最小修正・ローカル検証
+
+2026-10-12（日本時間）。正式受付開始前の最終監査Hで発見された不足だけを修正。本番未反映。
+
+## 原因と修正
+
+LocalEntry.runがsendingだけで結果不明時の固定を判定していた。再読み込み後のrecoverはsending=falseのため、UNKNOWN・通信例外でidleへ戻り、pendingでも固定を解除していた。committedも完了画面へ進まなかった。
+
+recover要求をメモリ内に保持し、確定できない応答・通信例外・pendingではunknownと入力固定を維持する。認証欄の外の「同じ操作を再確認」は、フォーム進捗・保存確認チェック・settings取得可否に依存せず、保持した要求を再実行する。再読み込み後の空フォームからcreate/updateを組み立てない。committedで本番完了画面へ進み、版2以上は更新完了として表示する。通常送信の結果不明は同じcreate/update原本を保持する。
+
+Worker・production client・Apps Scriptの契約と保存処理は変更していない。本番経路ではpending成功応答は既存の検証によりUNKNOWN／通信例外相当となるため、同じ要求の再確認を維持する。自動ポーリングは追加せず、利用者が時間をおいて再確認する。
+
+## 検証結果
+
+- `npm test`：71テスト成功（既存59＋追加12）。外部保存なし。
+- 追加テスト：実LocalEntryをbundleし、React hookの小さなテスト用実行環境でイベント・非同期処理を確認。recoverのUNKNOWN／CLOSED／DENIED／BUSY／PENDING／通信例外／不正応答／本番pending応答、同一要求再確認、連打抑止、入力・認証終了の固定、新規・更新の完了遷移、ローカルpending継続、通常送信成功・UNKNOWN後の原本維持を確認。
+- `npm run build:cloudflare`：型チェック・Vite本番ビルド・Wrangler dry-run成功。初回はsandboxのrealpath EPERMで失敗し、権限付きで同一コマンドを再実行した。実配備なし。
+- `git diff --check`、対象差分のレビュー、ローカルenvの既知秘密値との照合を実施。秘密値の内容は出力しない。
+
+## 限界と停止点
+
+ブラウザDOM・スマホ実機の操作、実Worker／Google経由の障害注入は未検証。自動テストは本番clientの応答検証とコンポーネントイベントのローカル試験であり、ブラウザE2Eではない。
+
+画面再読み込みでメモリ内の固定状態は消える。利用者は保存票で再確認する必要があり、別タブ・別端末や保存票紛失までは防がない。受付停止中は回復自体が拒否され、prepared前に失敗した操作はrecoverで発見できない場合がある。DENIEDでも未保存と断定せず固定するため、ID・コード誤入力時は運営相談が必要となる。これらの保存側・運用上の限界は今回変更しない。
+
+本番応募送信、Google／Cloudflareの設定・データ変更、受付開始、pushは行っていない。作業前からの監査文書3件（docs/README.md、docs/prelaunch-checklist.md、docs/final-prelaunch-audit.md）の未コミット変更は今回のcommitに含めない。今回の修正だけをローカルcommitして停止する。
