@@ -1,0 +1,40 @@
+# 設計ドキュメント索引
+
+Phase 4の架空データによるGoogle実環境試験まで実施し、専用APIは停止しました。続いてPhase 5の判定範囲・ID比較・一方だけ一致した場合の保留を確定し、架空データ専用のローカル試作を検証済みです。2026-10-11、本番用3保存先とApps Scriptを所有者限定で作成し、`FAC-2026-` 接頭辞修正後のバージョン2で架空データの保存・再確認・重複拒否・認証失敗を実環境検証しました。検証後は受付停止へ戻しています。正式公開はCloudflare Workers + Static Assetsから本番画面と同一オリジンAPIを提供し、裏側のApps Scriptへ保存する構成を採用してローカル実装・検証済みです。Cloudflare実環境への接続と受付開始は未実施です。正式締切は2026年10月24日23:59（日本時間）、運営相談先は [@sora_kkp_game](https://x.com/sora_kkp_game)、初回大会のキラー選択肢はVol.1参照の43体と決定済みです。以下は仕様正本であり、本番DB・シート列・API仕様の最終確定書ではありません。実装範囲は implementation-plan.md を参照してください。
+
+Phase 3の試験保存を接続し、全5応募形式と人数別の実保存・照合・再送、同時送信、入力拒否、保存後の応答切断とフォームの再確認を検証済み。2026-10-08にGoogle側の受付停止と保存内容不変も確認しました。試験APIは停止中です。試験構成は `apps-script-setup.md`、再開後の詳細結果は `phase3-verification.md` を参照し、本番仕様とは区別します。
+
+| ファイル | 正本として扱う内容 |
+| --- | --- |
+| [requirements.md](requirements.md) | 共通要件、初回大会設定、取得情報、未確定事項 |
+| [entry-flow.md](entry-flow.md) | 画面順序、条件付き表示、確認・受付・編集・重複の導線 |
+| [data-model.md](data-model.md) | 概念モデル、関係、責務、保存連携の境界 |
+| [implementation-plan.md](implementation-plan.md) | フェーズ、依存関係、検証・公開条件 |
+| [storage-integration.md](storage-integration.md) | Phase 3の保存連携設計案。保存先・権限・再送・保存期間の未確定事項 |
+| [apps-script-setup.md](apps-script-setup.md) | 承認されたPhase 3試験構成、Google側の設定、試験手順・検証状況 |
+| [phase3-verification.md](phase3-verification.md) | 再開後の実保存・照合・応答切断試験、自動テスト結果、未完了事項 |
+| [phase4-design.md](phase4-design.md) | 受付番号・応募編集の採用済み運用、未確定の技術案、認証情報の分離、実装前の条件 |
+| [phase4-technical-proposal.md](phase4-technical-proposal.md) | 採用した基本方式と未確定の技術詳細。送信前コード保存、認証、途中保存回復 |
+| [phase4-local-checklist.md](phase4-local-checklist.md) | ローカル実装の作業範囲・検証計画 |
+| [phase4-local-verification.md](phase4-local-verification.md) | ローカル実装の確認方法・実施結果・本番との差・未検証事項 |
+| [phase4-google-test-plan.md](phase4-google-test-plan.md) | 承認済みのGoogle試験範囲と実施結果の概略。新規対象・権限・試験手順 |
+| [phase4-google-setup.md](phase4-google-setup.md) | 専用Apps Scriptの設定、列構成、模擬検証と停止状態 |
+| [phase4-google-verification.md](phase4-google-verification.md) | 架空データによる実保存・編集・回復、3保存先の照合、停止後拒否、未検証事項 |
+| [phase5-design-proposal.md](phase5-design-proposal.md) | 重複応募チェックの採用済み判断、未決定の提案、今後の検証案 |
+| [phase5-local-verification.md](phase5-local-verification.md) | 架空データによるローカル重複チェックの実装・検証結果と未確認事項 |
+| [phase5-google-test-plan.md](phase5-google-test-plan.md) | Phase 5の架空データによるGoogle実環境試験の提案。対象・権限・検証・停止条件。未実施 |
+| [production-launch-plan.md](production-launch-plan.md) | 初回公開から実応募を受け付けるための現在地、本番サイト構成、Google保存経路、公開前チェック |
+| [production-apps-script-setup.md](production-apps-script-setup.md) | 採用したApps Script Webアプリ方式の配置物、保存先の列構成、設定、配備・検証順序 |
+| [production-google-verification.md](production-google-verification.md) | `FAC-2026-` 修正後の再配備、架空データ保存、再確認、重複・認証失敗、停止復帰の実環境結果 |
+| [cloudflare-deployment.md](cloudflare-deployment.md) | Cloudflare Workers + Static Assetsの本番構成、Secret、ローカル検証、外部設定前の手動手順 |
+| [cloudflare-handoff-verification.md](cloudflare-handoff-verification.md) | 引き継ぎ時のローカル再検証結果と当時の文書不整合 |
+| [git-file-inventory.md](git-file-inventory.md) | 公開前整理時点の未追跡ファイル全件とGit管理・生成物・除外提案の分類 |
+| [prelaunch-checklist.md](prelaunch-checklist.md) | 文書の現在地整理、Git管理準備、Cloudflare手動設定と受付開始前の残作業 |
+| [cloudflare-connection-runbook.md](cloudflare-connection-runbook.md) | 本番接続前の設定値、初回Secret配備の前提、停止中接続試験、保存試験の承認境界、ロールバック |
+| [DESIGN.md](../DESIGN.md) | 視覚・操作設計、確認済み既存資料のパス、Vol.1から参考にする方針と意図的な差分 |
+| [AGENTS.md](../AGENTS.md) | AIエージェントの作業範囲・開発ルール |
+| [README.md](../README.md) | プロジェクト概要・現在地 |
+
+仕様変更時は関係する正本を一緒に更新します。不一致があれば実装を止めて報告し、未確定事項は推測で埋めません。受付番号等の例は説明用であり正式仕様ではありません。
+
+既存dbd-tournament-siteのデザイン資料は読み取り専用で確認済みです。参考資料の内容を全面採用せず、sorafes-entryの緑アクセントを含む確定判断は `DESIGN.md` を正本とします。Vol.1のコーラル系アクセントとの差は識別性のための意図的な差分です。

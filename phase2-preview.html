@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase 2 入力ルールの確認用プレビュー</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101211;color:#f1f3f2;font:16px/1.7 system-ui,sans-serif}main{max-width:900px;margin:auto;padding:32px 20px}h1{font-size:clamp(24px,4vw,34px)}h2{font-size:22px}p{margin:8px 0 20px}.muted{color:#b8c3bb}.notice,section{border:1px solid #354d3b;padding:24px;margin:24px 0;background:#171b18}.notice{background:#1b2920}label{display:grid;gap:6px;margin:16px 0}input,select,button{font:inherit;padding:10px;background:#101411;color:#fff;border:1px solid #637168;border-radius:4px;width:100%}button{background:#8adb9c;color:#101b13;cursor:pointer;font-weight:600}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}.example{background:#203026;padding:16px;margin-top:16px}.error{color:#ffb9b9}.ok{color:#8adb9c}small{display:block;color:#b8c3bb}:focus-visible{outline:3px solid #8adb9c;outline-offset:3px}code{overflow-wrap:anywhere}a{color:#8adb9c}
+</style>
+<main>
+<p class="ok">そらふぇす / 設計確認</p><h1>入力ルールを、画面で確認</h1>
+<div class="notice">以下は未確定の提案を比較するためのプレビューです。本体フォームの仕様はまだ変更していません。入力は送信・保存されません。再読み込みで消えます。</div>
+<section><h2>1. 数値条件の提案</h2><p class="muted">値を変えると、提案したチェック結果が表示されます。</p>
+<div class="grid"><label>総プレイ時間（時間）<input id="hours" type="number" step="any" value="1200.5"><small>0以上の概算数値。小数も可。</small></label><label>出場回数（経験あり）<input id="appearances" value="3"><small>1以上の整数、または「不明」。</small></label><label>優勝回数<input id="wins" value="4"><small>0以上の整数、または「不明」。</small></label><label>準優勝回数<input id="runners" value="1"><small>0以上の整数、または「不明」。</small></label></div>
+<div id="numberResult" class="example" aria-live="polite"></div><p class="muted">優勝・準優勝の各回数を出場回数と比較します。両者の合計では制限しません。「不明」は0や未回答と区別します。</p></section>
+<section><h2>2. IDの入力とXアカウント条件</h2><div class="grid"><label>X ID<input id="xid" value=" @sample_player "><small>前後の空白と先頭の@を取り除く提案です。文字種の厳密なチェックはこの例には含めていません。</small></label><label>ゲーム内ID<input id="gameid" value=" SamplePlayer#1234 "><small>前後の空白を除き、#の前後の入力を確認します。</small></label></div><div id="idResult" class="example" aria-live="polite"></div>
+<div class="notice"><strong>全員のXアカウントは、応募時点で作成から3か月以上</strong><p>フォームでは条件を案内し、運営が手動で確認する案です。作成日や追加の個人情報は入力してもらいません。</p><small>手動確認の具体的な手順と月数の計算方法は、別途確認が必要です。</small></div></section>
+<section><h2>3. 人数変更と入力保持</h2><p>2人目に架空の名前を入力し、人数を1名に変更してください。確認表示から2人目が外れ、2名に戻すと入力が復元されます。</p><label>確認用の人数<select id="count"><option value="2">2名</option><option value="1">1名</option></select></label><div class="grid"><label>プレイヤー1<input id="p1" value="サンプル太郎"></label><label id="p2field">プレイヤー2<input id="p2" value="サンプル花子"></label></div><div id="summary" class="example" aria-live="polite"></div><small>これは人数変更の例です。本体では応募形式で対象外になるキラー情報なども、確認・保存対象から除外する案です。キラー一覧は引き続きサンプルで検証します。</small></section>
+<p>この3つの動作を確認したら、チャットで「全部この案で」または変更したい点を教えてください。</p><a href="/">本体のPhase 1プレビューへ戻る</a>
+</main>
+<script>
+const el=id=>document.getElementById(id);
+function update(){
+ const errors=[];const h=el('hours').value.trim();if(h===''||!Number.isFinite(Number(h))||Number(h)<0)errors.push('総プレイ時間は0以上の数値を入力してください。');
+ const values={};for(const [id,label,min] of [['appearances','出場回数',1],['wins','優勝回数',0],['runners','準優勝回数',0]]){const v=el(id).value.trim();if(v==='不明'){values[id]=null;continue}if(!/^\d+$/.test(v)||!Number.isSafeInteger(Number(v))||Number(v)<min){errors.push(label+'は'+min+'以上の整数、または「不明」を入力してください。');values[id]=null}else values[id]=Number(v)}
+ for(const [id,label] of [['wins','優勝回数'],['runners','準優勝回数']])if(values[id]!=null&&values.appearances!=null&&values[id]>values.appearances)errors.push(label+'が出場回数を超えています。');
+ el('numberResult').textContent=errors.length?errors.join(' / '):'✓ この提案の数値条件を満たしています。';el('numberResult').className='example '+(errors.length?'error':'ok');
+ const x=el('xid').value.trim().replace(/^@/,'');const g=el('gameid').value.trim();const split=g.indexOf('#');const valid=split>0&&g.slice(split+1).trim().length>0;
+ el('idResult').textContent='整形後のX ID：'+(x||'未入力')+' ／ ゲーム内ID：'+(g||'未入力')+' ／ '+(valid?'✓ #の前後に入力があります':'#の前後を入力してください');
+ const count=Number(el('count').value);el('p2field').style.display=count===2?'grid':'none';el('summary').textContent='確認画面に表示するメンバー：'+el('p1').value+(count===2?'、'+el('p2').value:'')+'（'+count+'名）';
+}
+document.querySelectorAll('input,select').forEach(input=>input.addEventListener('input',update));update();
+</script>
+</html>

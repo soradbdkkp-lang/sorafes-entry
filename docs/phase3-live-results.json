@@ -1,0 +1,824 @@
+{
+  "date": "2026-10-07",
+  "mode": "fictional-only",
+  "saved": [
+    {
+      "kind": "killer",
+      "count": 1,
+      "requestId": "2c138798-421c-409c-bbbb-526e158a987c",
+      "savedId": "TEST-6f7b8249-2fe0-46e2-96ec-b57985b39311",
+      "expectedDraft": {
+        "kind": "killer",
+        "count": 1,
+        "teamName": "",
+        "representative": 0,
+        "players": [
+          {
+            "name": "架空_killer1_1",
+            "xId": "fiction_killer1_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionkiller11#0000",
+            "hours": "0",
+            "killer": true,
+            "duty": "dedicated",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "18:00以降の開始を希望"
+      }
+    },
+    {
+      "kind": "solo",
+      "count": 1,
+      "requestId": "d27f6c60-23ba-43d5-92c4-da4e5694eb82",
+      "savedId": "TEST-dde9c805-13a7-4a4f-9cd1-a739e621ca5e",
+      "expectedDraft": {
+        "kind": "solo",
+        "count": 1,
+        "teamName": "",
+        "representative": 0,
+        "players": [
+          {
+            "name": "架空_solo1_1",
+            "xId": "fiction_solo1_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionsolo11#0000",
+            "hours": "0",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "18:00以降の開始を希望"
+      }
+    },
+    {
+      "kind": "duo",
+      "count": 2,
+      "requestId": "e8b07825-3175-48dd-af27-1fc5d2bff79a",
+      "savedId": "TEST-63476063-0277-48a2-9808-0e5072f0c712",
+      "expectedDraft": {
+        "kind": "duo",
+        "count": 2,
+        "teamName": "",
+        "representative": 1,
+        "players": [
+          {
+            "name": "架空_duo2_1",
+            "xId": "fiction_duo2_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionduo21#0000",
+            "hours": "0",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_duo2_2",
+            "xId": "fiction_duo2_2",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionduo22#0000",
+            "hours": "12.5",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "yes",
+            "dck": "yes",
+            "other": "yes",
+            "difDetails": {
+              "name": "",
+              "appearances": "3",
+              "wins": "2",
+              "runnersUp": "2"
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "unknown",
+              "wins": "0",
+              "runnersUp": "unknown"
+            },
+            "histories": [
+              {
+                "name": "架空大会A",
+                "appearances": "1",
+                "wins": "0",
+                "runnersUp": "0"
+              },
+              {
+                "name": "架空大会B",
+                "appearances": "unknown",
+                "wins": "unknown",
+                "runnersUp": "unknown"
+              }
+            ]
+          }
+        ],
+        "time": "どちらでも問題ない"
+      }
+    },
+    {
+      "kind": "survivors",
+      "count": 4,
+      "requestId": "b4640491-bec1-41b0-acfc-ed6281d29787",
+      "savedId": "TEST-bf6d8675-358f-4c7e-8e06-2e8d19373f8f",
+      "expectedDraft": {
+        "kind": "survivors",
+        "count": 4,
+        "teamName": "",
+        "representative": 3,
+        "players": [
+          {
+            "name": "架空_survivors4_1",
+            "xId": "fiction_survivors4_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionsurvivors41#0000",
+            "hours": "0",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_survivors4_2",
+            "xId": "fiction_survivors4_2",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionsurvivors42#0000",
+            "hours": "12.5",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_survivors4_3",
+            "xId": "fiction_survivors4_3",
+            "platform": "Nintendo Switch",
+            "otherPlatform": "",
+            "gameId": "Fictionsurvivors43#0000",
+            "hours": "12.5",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_survivors4_4",
+            "xId": "fiction_survivors4_4",
+            "platform": "その他",
+            "otherPlatform": "架空の試験環境",
+            "gameId": "Fictionsurvivors44#0000",
+            "hours": "12.5",
+            "killer": false,
+            "duty": "",
+            "killers": [],
+            "favorite": "",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "18:00以降の開始を希望"
+      }
+    },
+    {
+      "kind": "team",
+      "count": 4,
+      "requestId": "f0650788-3c7b-4f8d-acb5-d12d7186e124",
+      "savedId": "TEST-1acb730f-e387-474b-a150-a8072c15c926",
+      "expectedDraft": {
+        "kind": "team",
+        "count": 4,
+        "teamName": "架空チーム4",
+        "representative": 3,
+        "players": [
+          {
+            "name": "架空_team4_1",
+            "xId": "fiction_team4_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionteam41#0000",
+            "hours": "0",
+            "killer": true,
+            "duty": "dedicated",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team4_2",
+            "xId": "fiction_team4_2",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionteam42#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team4_3",
+            "xId": "fiction_team4_3",
+            "platform": "Nintendo Switch",
+            "otherPlatform": "",
+            "gameId": "Fictionteam43#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team4_4",
+            "xId": "fiction_team4_4",
+            "platform": "その他",
+            "otherPlatform": "架空の試験環境",
+            "gameId": "Fictionteam44#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "18:00以降の開始を希望"
+      }
+    },
+    {
+      "kind": "team",
+      "count": 5,
+      "requestId": "9dbac8d7-c443-40dc-80bf-23a99b3cb67c",
+      "savedId": "TEST-60d75037-09e3-4ee6-a7c2-aff8177bfa5e",
+      "expectedDraft": {
+        "kind": "team",
+        "count": 5,
+        "teamName": "架空チーム5",
+        "representative": 4,
+        "players": [
+          {
+            "name": "架空_team5_1",
+            "xId": "fiction_team5_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionteam51#0000",
+            "hours": "0",
+            "killer": true,
+            "duty": "dedicated",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team5_2",
+            "xId": "fiction_team5_2",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionteam52#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team5_3",
+            "xId": "fiction_team5_3",
+            "platform": "Nintendo Switch",
+            "otherPlatform": "",
+            "gameId": "Fictionteam53#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team5_4",
+            "xId": "fiction_team5_4",
+            "platform": "その他",
+            "otherPlatform": "架空の試験環境",
+            "gameId": "Fictionteam54#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team5_5",
+            "xId": "fiction_team5_5",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionteam55#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "どちらでも問題ない"
+      }
+    },
+    {
+      "kind": "team",
+      "count": 6,
+      "requestId": "1c7b38d8-572e-49fc-be83-812c9b59ff3a",
+      "savedId": "TEST-5f34600d-9d67-4c1d-ab33-ff6d6ccd2989",
+      "expectedDraft": {
+        "kind": "team",
+        "count": 6,
+        "teamName": "架空チーム6",
+        "representative": 5,
+        "players": [
+          {
+            "name": "架空_team6_1",
+            "xId": "fiction_team6_1",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionteam61#0000",
+            "hours": "0",
+            "killer": true,
+            "duty": "dedicated",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team6_2",
+            "xId": "fiction_team6_2",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionteam62#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team6_3",
+            "xId": "fiction_team6_3",
+            "platform": "Nintendo Switch",
+            "otherPlatform": "",
+            "gameId": "Fictionteam63#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team6_4",
+            "xId": "fiction_team6_4",
+            "platform": "その他",
+            "otherPlatform": "架空の試験環境",
+            "gameId": "Fictionteam64#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team6_5",
+            "xId": "fiction_team6_5",
+            "platform": "Steam",
+            "otherPlatform": "",
+            "gameId": "Fictionteam65#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          },
+          {
+            "name": "架空_team6_6",
+            "xId": "fiction_team6_6",
+            "platform": "PlayStation",
+            "otherPlatform": "",
+            "gameId": "Fictionteam66#0000",
+            "hours": "12.5",
+            "killer": true,
+            "duty": "both",
+            "killers": [
+              "sample-a",
+              "sample-b"
+            ],
+            "favorite": "sample-b",
+            "dif": "no",
+            "dck": "no",
+            "other": "no",
+            "difDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "dckDetails": {
+              "name": "",
+              "appearances": "",
+              "wins": "",
+              "runnersUp": ""
+            },
+            "histories": []
+          }
+        ],
+        "time": "16:00開始でも参加可能"
+      }
+    }
+  ],
+  "rejected": [
+    "形式と人数の不一致",
+    "代表者が範囲外",
+    "実績の優勝回数超過",
+    "キラー専任回答なし",
+    "必須IDなし",
+    "本番モード指定"
+  ]
+}

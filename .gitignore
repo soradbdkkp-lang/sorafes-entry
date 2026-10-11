@@ -134,3 +134,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Cloudflare local state and local secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
+.env.*.local
+
+# Apps Script deployment artifacts (regenerate from source)
+apps-script/generated/
+apps-script/phase4-generated/
+apps-script/production-generated/
