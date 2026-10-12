@@ -1,6 +1,10 @@
 # 設計ドキュメント索引
 
-Phase 4の架空データによるGoogle実環境試験まで実施し、専用APIは停止しました。続いてPhase 5の判定範囲・ID比較・一方だけ一致した場合の保留を確定し、架空データ専用のローカル試作を検証済みです。2026-10-11、本番用3保存先とApps Scriptを所有者限定で作成し、`FAC-2026-` 接頭辞修正後のバージョン2で架空データの保存・再確認・重複拒否・認証失敗を実環境検証しました。検証後は受付停止へ戻しています。正式公開はCloudflare Workers + Static Assetsから本番画面と同一オリジンAPIを提供し、裏側のApps Scriptへ保存する構成を採用してローカル実装・検証済みです。Cloudflare実環境への接続と受付開始は未実施です。正式締切は2026年10月24日23:59（日本時間）、運営相談先は [@sora_kkp_game](https://x.com/sora_kkp_game)、初回大会のキラー選択肢はVol.1参照の43体と決定済みです。以下は仕様正本であり、本番DB・シート列・API仕様の最終確定書ではありません。実装範囲は implementation-plan.md を参照してください。
+> 運用整理（2026-10-12）：所有者担当、紛失・重複誤判定の相談保留、Xの3か月確認、年齢条件を追加しない方針を採用。試験4IDの全出力除外手順、未検証リスク分類、最小バックアップ案、正式URL案、停止・再開・開始直前チェックと条件付き開始可の判断は [最新の運用整理](production-operations.md#2026-10-12-運用確認と開始可否) を参照。バックアップ頻度・URL正式採用・残リスク受容と直前確認は残条件。正式受付は開始せず、今回pushなし。
+
+> 2026-10-12 最新：Cloudflare本番配備・GitHub / Workers Builds接続・回復UI本番反映は前工程で完了。承認済みのteam6・killer新規2件とキラーrecover1件を追加試験し、受付停止へ戻した。`PRODUCTION_ENABLED=false`、`PRODUCTION_NEXT=4`、Worker CLOSED。試験応募4件は保持し、運営出力から明示ID集合で除外する。最新の状態は [追加本番試験](production-additional-verification.md)、採番・除外の確定運用は [本番運用ルール](production-operations.md)、残る開始条件は [公開前チェックリスト](prelaunch-checklist.md) を参照。下記の接続未実施等と [最終監査](final-prelaunch-audit.md) の旧値は履歴。正式受付は開始していない。
+
+Phase 4の架空データによるGoogle実環境試験まで実施し、専用APIは停止しました。続いてPhase 5の判定範囲・ID比較・一方だけ一致した場合の保留を確定し、架空データ専用のローカル試作を検証済みです。2026-10-11、本番用3保存先とApps Scriptを所有者限定で作成し、`FAC-2026-` 接頭辞修正後のバージョン2で架空データの保存・再確認・重複拒否・認証失敗を実環境検証しました。検証後は受付停止へ戻しています。正式公開はCloudflare Workers + Static Assetsから本番画面と同一オリジンAPIを提供し、裏側のApps Scriptへ保存する構成を採用してローカル実装・検証済みです。Cloudflare実環境への接続は完了済み、正式受付開始は未実施です。正式締切は2026年10月24日23:59（日本時間）、運営相談先は [@sora_kkp_game](https://x.com/sora_kkp_game)、初回大会のキラー選択肢はVol.1参照の43体と決定済みです。以下は仕様正本であり、本番DB・シート列・API仕様の最終確定書ではありません。実装範囲は implementation-plan.md を参照してください。
 
 Phase 3の試験保存を接続し、全5応募形式と人数別の実保存・照合・再送、同時送信、入力拒否、保存後の応答切断とフォームの再確認を検証済み。2026-10-08にGoogle側の受付停止と保存内容不変も確認しました。試験APIは停止中です。試験構成は `apps-script-setup.md`、再開後の詳細結果は `phase3-verification.md` を参照し、本番仕様とは区別します。
 
@@ -26,6 +30,10 @@ Phase 3の試験保存を接続し、全5応募形式と人数別の実保存・
 | [production-launch-plan.md](production-launch-plan.md) | 初回公開から実応募を受け付けるための現在地、本番サイト構成、Google保存経路、公開前チェック |
 | [production-apps-script-setup.md](production-apps-script-setup.md) | 採用したApps Script Webアプリ方式の配置物、保存先の列構成、設定、配備・検証順序 |
 | [production-google-verification.md](production-google-verification.md) | `FAC-2026-` 修正後の再配備、架空データ保存、再確認、重複・認証失敗、停止復帰の実環境結果 |
+| [production-additional-verification.md](production-additional-verification.md) | 2026-10-12のteam6・killer・確定済みrecoverの追加本番試験、3保存先照合、受付有効時間・停止復帰、未検証範囲 |
+| [production-operations.md](production-operations.md) | 採番・全試験ID除外、運営手順、未検証リスク、バックアップ・URL案、障害・停止再開、開始直前チェックと条件付き開始可の判定 |
+| [final-prelaunch-audit.md](final-prelaunch-audit.md) | 最終監査当時の確認結果と残課題。最新状態は各冒頭の補足を優先 |
+| [recovery-ui-verification.md](recovery-ui-verification.md) | 回復UIの入力固定修正と71テストの過去検証結果、本番反映後の参照 |
 | [cloudflare-deployment.md](cloudflare-deployment.md) | Cloudflare Workers + Static Assetsの本番構成、Secret、ローカル検証、外部設定前の手動手順 |
 | [cloudflare-handoff-verification.md](cloudflare-handoff-verification.md) | 引き継ぎ時のローカル再検証結果と当時の文書不整合 |
 | [git-file-inventory.md](git-file-inventory.md) | 公開前整理時点の未追跡ファイル全件とGit管理・生成物・除外提案の分類 |
