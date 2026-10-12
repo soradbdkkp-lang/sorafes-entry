@@ -1,5 +1,17 @@
 # 設計ドキュメント索引
 
+## 正式受付開始後の最新記録（2026-10-12）
+
+**正式受付開始済み・告知可能。** 有効化保存操作は **2026-10-12 17:01:08.431 JST**、保存後確認は **17:01:09.031 JST**。ユーザー報告で `PRODUCTION_ENABLED=true`、`PRODUCTION_NEXT="4"`、Worker settings HTTP 200／`ok:true`／`Cache-Control: no-store`、PC・スマホUI正常、STEP 8「応募を送信」の表示・有効を確認。
+
+開始直後は正式応募0件・試験応募4件、保存先件数は開始前と一致。`PRODUCTION_TRAFFIC` のみ既存仕様で自動更新。確認用送信は未実施。試験ID `FAC-2026-000001`〜`FAC-2026-000004` の正式運営対象からの除外を維持する。詳細・告知可能判定・後続監視は [正式受付開始記録](production-final-readiness.md) を参照。告知の実施は未記録。
+
+今回、外部環境の再取得・変更なし。関連Markdown5件のみcommitしてpush前で停止する。以下の停止継続・開始未実施・承認待ち・commitなし等は開始前の履歴として扱う。締切専用非本番検証（所有者、2026-10-23 18:00 JSTまで）は後続必須として維持。
+
+
+
+> 最新（2026-10-12 開始直前）：[正式受付開始直前チェック](production-final-readiness.md)。判定は **B. 条件付き開始可、停止継続**。未送信UI分岐、バックアップ3点・所有者限定権限・原本一致、停止・採番・Version・Gitを確認済み。正式URLとバックアップ頻度・指定残リスク受容を反映。物理iPhoneのSafe Areaを含む未送信確認はユーザー報告で完了。最新直前照合も合格、正式開始の明示承認待ち。締切専用検証は所有者が10月23日18:00日本時間までに非本番で実施。以下の旧残条件は最新記録に従う。今回受付開始・pushなし。
+
 > 運用整理（2026-10-12）：所有者担当、紛失・重複誤判定の相談保留、Xの3か月確認、年齢条件を追加しない方針を採用。試験4IDの全出力除外手順、未検証リスク分類、最小バックアップ案、正式URL案、停止・再開・開始直前チェックと条件付き開始可の判断は [最新の運用整理](production-operations.md#2026-10-12-運用確認と開始可否) を参照。バックアップ頻度・URL正式採用・残リスク受容と直前確認は残条件。正式受付は開始せず、今回pushなし。
 
 > 2026-10-12 最新：Cloudflare本番配備・GitHub / Workers Builds接続・回復UI本番反映は前工程で完了。承認済みのteam6・killer新規2件とキラーrecover1件を追加試験し、受付停止へ戻した。`PRODUCTION_ENABLED=false`、`PRODUCTION_NEXT=4`、Worker CLOSED。試験応募4件は保持し、運営出力から明示ID集合で除外する。最新の状態は [追加本番試験](production-additional-verification.md)、採番・除外の確定運用は [本番運用ルール](production-operations.md)、残る開始条件は [公開前チェックリスト](prelaunch-checklist.md) を参照。下記の接続未実施等と [最終監査](final-prelaunch-audit.md) の旧値は履歴。正式受付は開始していない。
@@ -32,6 +44,7 @@ Phase 3の試験保存を接続し、全5応募形式と人数別の実保存・
 | [production-google-verification.md](production-google-verification.md) | `FAC-2026-` 修正後の再配備、架空データ保存、再確認、重複・認証失敗、停止復帰の実環境結果 |
 | [production-additional-verification.md](production-additional-verification.md) | 2026-10-12のteam6・killer・確定済みrecoverの追加本番試験、3保存先照合、受付有効時間・停止復帰、未検証範囲 |
 | [production-operations.md](production-operations.md) | 採番・全試験ID除外、運営手順、未検証リスク、バックアップ・URL案、障害・停止再開、開始直前チェックと条件付き開始可の判定 |
+| [production-final-readiness.md](production-final-readiness.md) | 正式受付開始日時・開始直後状態・告知可能判定、開始前のUI・バックアップ・配備照合履歴、締切専用検証の担当期限 |
 | [final-prelaunch-audit.md](final-prelaunch-audit.md) | 最終監査当時の確認結果と残課題。最新状態は各冒頭の補足を優先 |
 | [recovery-ui-verification.md](recovery-ui-verification.md) | 回復UIの入力固定修正と71テストの過去検証結果、本番反映後の参照 |
 | [cloudflare-deployment.md](cloudflare-deployment.md) | Cloudflare Workers + Static Assetsの本番構成、Secret、ローカル検証、外部設定前の手動手順 |
