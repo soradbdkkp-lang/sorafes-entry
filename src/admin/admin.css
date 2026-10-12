@@ -1,0 +1,11 @@
+.admin-page { max-width: 960px; margin: auto; padding: 24px 16px; }
+.admin-card, .admin-member { border: 1px solid #478765; padding: 20px; margin: 20px 0; border-radius: 8px; min-width: 0; }
+.admin-facts { display: grid; gap: 12px; }
+.admin-facts > div { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); gap: 12px; }
+.admin-facts dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.admin-facts dt { color: #b8cec0; }
+.admin-search { display: block; margin-top: 24px; }
+.admin-search input { display: block; width: 100%; margin-top: 8px; }
+.admin-page summary { cursor: pointer; padding: 16px 0; color: #a6f1bf; }
+.admin-page summary:focus-visible { outline: 2px solid #a6f1bf; }
+@media (max-width: 480px) { .admin-facts > div { grid-template-columns: 1fr; gap: 4px; } .admin-card, .admin-member { padding: 12px; } }

@@ -1,3 +1,4 @@
+import { adminRequest } from './admin.mjs';
 const TOURNAMENT_ID = 'frog-assemble-2026';
 const ENDPOINT_PATTERN = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 const RECEIPT_PATTERN = /^FAC-2026-\d{6}$/;
@@ -93,6 +94,7 @@ async function relay(request, env, fetchImpl) {
 
 export async function handleRequest(request, env, fetchImpl = fetch) {
   const url = new URL(request.url);
+  if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname === '/api/admin' || url.pathname.startsWith('/api/admin/')) return adminRequest(request, env, fetchImpl);
   if (url.pathname === '/api/entry') return relay(request, env, fetchImpl);
   if (url.pathname.startsWith('/api/')) return json({ ok: false, code: 'INVALID' }, 404);
   return env.ASSETS.fetch(request);
