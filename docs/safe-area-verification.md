@@ -1,5 +1,38 @@
 # iPhone Safe Area表示修正（2026-10-12）
 
+## 再修正：スクロール領域のクリップ（2026-10-12）
+
+以下が最新。前回commit 7fee42cbは本番Version f8b78dfe-b8f7-4efe-b4c5-d5ad4f2e2072へ配備済みだが、ユーザーが **iOS 26.3.1 Safari** で再確認し、スクロール時に「担当ロールを修正」等が時刻16:19付近へ入り込む問題が残ると報告した。前回修正を解消済みとは扱わない。この会話に画像データ自体はなく、実機状況はユーザー報告に基づく。
+
+### 調査と原因の確度
+
+旧body::beforeはposition:fixed、top:0、height:env(safe-area-inset-top, 0px)、z-index:1、背景#101211、pointer-events:none。本文に対抗するposition/z-index/transform/isolation等はなく、通常の描画順では本文より前面。重なり順の不足を示す証拠はない。envのフォールバック0pxは未定義時の値で、実値0を非0へ補正しない。そのためenvが0ならレイヤーは高さ0。非0でもfixedレイヤーはページスクロールやSafari chromeの描画をクリップするものではなく、初期余白・かぶせる方式では実機の目標を満たせなかった。
+
+**実機のenv実測値、visualViewport位置、Safari合成描画の直接原因は未取得・未断定。** [WebKitのfixed/viewportずれ報告](https://bugs.webkit.org/show_bug.cgi?id=300523)も参照したが、今回と同一原因と認定していない。WebページのCSSでSafari自身のステータスバーを直接制御できるとは扱わない。
+
+### 修正範囲
+
+- fixed疑似要素を撤去。html/bodyの外側スクロールを止め、bodyを100dvh（未対応時100%）へ収める。
+- body上端にenv(safe-area-inset-top, 0px)を確保し、その内側の#rootだけをheight:100%・overflow-y:autoでスクロールさせる。左右・フッター下端のSafe Area対応は維持。
+- #rootにcontain:paintを指定し、子孫がスクロール領域外へ描画されない境界とstacking contextを設ける。上端の非スクロール領域は既存の#101211背景だけ。外側へのスクロール連鎖・オーバースクロールをoverscroll-behavior-y:noneで抑える。
+- 初期上端余白の合計は従来と同じmax(20px, inset-top)となるよう、ヘッダー内部はmax(0px, 20px - inset-top)とする。inset=0なら従来のヘッダー20px・フッター24px。固定の端末別高さやiOS判定は追加しない。
+- viewport-fit=cover維持。React/フォーム/文字サイズ/配色/ボタン/送信/recover処理の変更なし。スクロールの所有者だけがdocumentから#rootへ変わる。既存コードにwindow.scrollTo等への依存はない。Safariバーの自動縮小、ページ引き下げ更新等は外側スクロール停止で従来と挙動が変わる可能性があり実機で確認する。
+
+### 再検証と停止地点
+
+- npm test：既存71件すべて成功、失敗0。
+- npm run build：tsc --noEmitとVite production build成功。
+- npx wrangler deploy --dry-run成功。配備なし。
+- 生成CSSでhtml/bodyのoverflow:hidden、100dvh、#rootのcontain:paint/overflow-y:auto、上下左右envの保持、旧fixedマスク除去を確認。
+- ローカル専用サーバーでsettingsをCLOSEDに模擬し外部APIへ接続せず表示確認。上端59px・下端34pxを生成CSSへ代入した試験用ページを使用（実機の測定値ではない）。390×844で#root上端59px・高さ785px。スクロール位置1051→2546でもdocument.scrollTop=0、上端20pxのhit-testはBODYで本文なし。スクリーンショットでも背景帯と本文のクリップを確認。フッター・次へに到達、STEP 2→3→4と必須エラーのフォーカスが領域内、プレイヤー名入力可能。
+- env=0の実buildで1280×900／375×812確認。#root上端0、横はみ出しなし（clientWidth=scrollWidth）。PC2列240px/808px、スマホ1列320px。PCヘッダー20px・フッター24px。
+- git diff --check、commit差分と秘密情報非混入を確認。試験サーバーは既存ignore対象.cache配下でcommitしない。dist・.env.production.local・Apps Script生成物も除外維持。
+- 今回はsrc/styles.cssと本書だけをcommitし、pushせず停止。既存未commit文書4件はそのまま保持。Google、Apps Script、Worker、Secret、受付・採番に変更操作なし。直前工程で確認したPRODUCTION_ENABLED=false、PRODUCTION_NEXT="4"、試験4件・正式0件、Worker CLOSEDを変更しない。今回は本番値を再取得していない。
+
+**実機解消は未実証。** 次回の承認された反映後に、iOS 26.3.1 Safariで確認画面の「担当ロールを修正」、受付番号、入力・recover画面をスクロールし、時刻等の領域が背景だけになることを確認する。慣性・上下端への引っ張り、縦横回転、Safariバー展開/縮小、キーボード開閉とフォーカス、フッターまで到達できることも確認する。env=0やブラウザー自身の合成描画を含む挙動はChromiumの模擬確認で保証しない。受付停止中の送信ボタン非表示は既存仕様、開始直後の表示・押下可能確認は引き続き残す。
+
+## 前回の記録（履歴）
+
 ## 実機結果と現在地
 
 ユーザーが物理iPhoneの正式URLで、フォーム表示、横方向の大きなはみ出しなし、STEP 1〜8、応募形式・入力・確認、必須エラー、サバイバー専用分岐、修正ボタン、受付停止表示、recover関連画面の表示を確認した。実応募送信なし。従来の実機未確認条件はこの報告で更新する。ただしスクロール時に受付番号・上部ボタン等がステータスバーの時刻・電波・Wi-Fi・バッテリーと重なり、公開前の修正・再確認条件として残す。
