@@ -2,6 +2,8 @@
 
 ## 運営管理画面のローカル追加（2026-10-12）
 
+最新の [認証・読取バックエンド準備](admin-production-preparation.md)：Access不採用へ変更。Worker内のパスワード・署名Cookie・セッション失効・永続試行制限をローカル実装。独立Apps Scriptとの共有Secretは維持。本番設定・Google操作・pushなし。Access向け記述は履歴。
+
 [運営専用応募管理](admin-entries.md)：読み取り専用一覧・詳細・検索、試験5ID除外、最新committed判定、認証候補と未設定時拒否、独立読取API、ローカル検証。本番配備・外部設定・pushは未実施。
 
 ## 受付中の運用への移行（2026-10-12）

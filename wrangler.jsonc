@@ -5,6 +5,10 @@
   "compatibility_date": "2026-10-11",
   "workers_dev": true,
   "preview_urls": false,
+  "durable_objects": {
+    "bindings": [{ "name": "ADMIN_AUTH", "class_name": "AdminAuth" }]
+  },
+  "migrations": [{ "tag": "admin-auth-v1", "new_sqlite_classes": ["AdminAuth"] }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

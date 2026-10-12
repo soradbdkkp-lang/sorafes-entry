@@ -1,4 +1,5 @@
 import { adminRequest } from './admin.mjs';
+export { AdminAuth } from './admin-session.mjs';
 const TOURNAMENT_ID = 'frog-assemble-2026';
 const ENDPOINT_PATTERN = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 const RECEIPT_PATTERN = /^FAC-2026-\d{6}$/;

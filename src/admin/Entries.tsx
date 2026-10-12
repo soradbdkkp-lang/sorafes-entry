@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadEntries } from './client';
 import { matchesEntry, type AdminEntry } from './data';
 import { tournament } from '../config/tournament';
@@ -22,11 +22,26 @@ export function EntryDetails({ entry: e }: { entry: AdminEntry }) {
   </article>)}</section>;
 }
 export default function Entries() {
+  const generation = useRef(0);
   const [entries, setEntries] = useState<AdminEntry[]>([]), [query, setQuery] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(true), [attempt, setAttempt] = useState(0);
-  useEffect(() => { let active = true; setLoading(true); setError(''); setEntries([]); void loadEntries().then(v => { if (active) setEntries(v); }).catch(() => { if (active) setError('応募を取得できませんでした。運営認証・接続設定を確認してください。'); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [attempt]);
+  useEffect(() => { const current = ++generation.current; const active = () => generation.current === current; setLoading(true); setError(''); setEntries([]); void loadEntries().then(v => { if (active()) setEntries(v); }).catch(() => { if (active()) setError('応募を取得できませんでした。運営認証・接続設定を確認してください。'); }).finally(() => { if (active()) setLoading(false); }); return () => { generation.current++; }; }, [attempt]);
+  useEffect(() => {
+    const hide = () => { generation.current++; setEntries([]); setQuery(''); };
+    const show = (e: PageTransitionEvent) => { if (e.persisted) setAttempt(a => a + 1); };
+    window.addEventListener('pagehide', hide); window.addEventListener('pageshow', show);
+    return () => { window.removeEventListener('pagehide', hide); window.removeEventListener('pageshow', show); };
+  }, []);
   const filtered = entries.filter(e => matchesEntry(e, query));
-  return <main className="admin-page"><h1>運営専用 応募管理</h1><p>読み取り専用・最新確定応募のみ。試験応募5件を除外しています。</p><button onClick={() => setAttempt(a => a + 1)} disabled={loading}>再取得</button><label className="admin-search">応募ID・プレイヤー名・X ID・チーム名で検索<input type="search" value={query} onChange={e => setQuery(e.target.value)} /></label>
-    {loading && <p role="status">読み込み中…</p>}{error && <p role="alert">{error}</p>}{!loading && !error && <p role="status">{filtered.length}件{filtered.length === 0 ? '：該当する応募はありません。' : ''}</p>}
+  async function logout() {
+    generation.current++; setLoading(false); setEntries([]); setQuery(''); setError('');
+    try {
+      const res = await fetch('/api/admin/logout', { method: 'POST', cache: 'no-store', credentials: 'same-origin', redirect: 'error' });
+      if (!res.ok || (await res.json()).ok !== true) throw Error();
+      location.replace('/admin/login');
+    } catch { setError('ログアウトを完了できませんでした。再試行してください。'); }
+  }
+  return <main className="admin-page"><h1>運営専用 応募管理</h1><p>読み取り専用・最新確定応募のみ。試験応募5件を除外しています。</p><button onClick={() => void logout()}>ログアウト</button> <button onClick={() => setAttempt(a => a + 1)} disabled={loading}>再取得</button><label className="admin-search">応募ID・プレイヤー名・X ID・チーム名で検索<input type="search" value={query} onChange={e => setQuery(e.target.value)} /></label>
+    {loading && <p role="status">読み込み中…</p>}{error && <p role="alert">{error} <a href="/admin/login">ログイン画面へ</a></p>}{!loading && !error && <p role="status">{filtered.length}件{filtered.length === 0 ? '：該当する応募はありません。' : ''}</p>}
     {filtered.map(e => <article className="admin-card" key={e.receipt}><h2>{e.receipt}</h2><p>{tournament.entries.find(k => k.id === e.kind)?.label ?? '応募形式未記録'} / {e.players.length}名</p>{e.teamName && <h3>{e.teamName}</h3>}<Facts values={ [['代表者／応募者', e.players[e.representative]?.name], ['代表者X ID', e.players[e.representative]?.xId ? `@${e.players[e.representative].xId}` : ''], ['応募日時', date(e.submittedAt)], ['状態', '確定済み（committed）']]}/><details><summary>詳細を見る</summary><EntryDetails entry={e} /></details></article>)}
   </main>;
 }

@@ -2,13 +2,16 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import Entries from './admin/Entries';
+import Login from './admin/Login';
 import './styles.css';
 
 const params = new URLSearchParams(location.search);
 const appsScriptMode = (globalThis as { __SORAFES_APPS_SCRIPT__?: boolean }).__SORAFES_APPS_SCRIPT__ === true;
 const productionMode = import.meta.env.PROD || appsScriptMode;
 const root = document.getElementById('root')!;
-if (location.pathname === '/admin/entries') {
+if (location.pathname === '/admin/login') {
+  createRoot(root).render(<StrictMode><Login /></StrictMode>);
+} else if (location.pathname === '/admin/entries') {
   createRoot(root).render(<StrictMode><Entries /></StrictMode>);
 } else if (location.hostname === '127.0.0.1' && location.pathname === '/code.txt') {
   root.textContent = '転記データを準備しています。';

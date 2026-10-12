@@ -1,5 +1,7 @@
 # 運営専用 応募管理（ローカル初期版）
 
+最新（2026-10-12）：ユーザー指示によりCloudflare Accessを不採用とし、Worker内のパスワード認証・1時間の署名Cookie・サーバー失効・永続試行制限へ変更した。現在の必要Secret・構成・検証と未検証事項は [認証準備の正本](admin-production-preparation.md) を優先する。以下のAccess案と84件の結果は初期commit時の履歴。Apps Script共有Secret方式は維持。本番設定変更・pushなし。
+
 2026-10-12。ユーザー承認範囲は設計・ローカル実装・検証・commitまで。push、配備、Cloudflare Access設定、Google操作は行わない。受付稼働中、試験5件・正式0件、ENABLED=true／NEXT="5" はユーザー申告の現在地であり、今回外部再取得していない。
 
 ## 調査と採用構成
