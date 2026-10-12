@@ -61,3 +61,7 @@ footer { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
 .completion .notice { margin-top: 28px; }
 @media (min-width: 600px) { .killer-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 800px) { .layout { grid-template-columns: 240px minmax(0, 1fr); } .steps { display: grid; overflow: visible; } .form-panel { padding: 36px; } .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.submission-flow { list-style: none; padding: 0; margin: 0; }
+.submission-flow li { display: grid; gap: 6px; text-align: center; overflow-wrap: anywhere; }
+.submission-flow li + li { margin-top: 6px; }

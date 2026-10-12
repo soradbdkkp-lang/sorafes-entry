@@ -16,6 +16,10 @@ export default function Review({ draft, config, edit, killerName, production = f
       {p.histories && <div className="details"><HistorySummary label="DIF" value={p.histories.difDetails} /><HistorySummary label="DCK" value={p.histories.dckDetails} />{p.histories.other === 'no' ? <p>その他大会：経験なし</p> : p.histories.otherDetails?.map((h, n) => <HistorySummary key={n} label={`その他大会 / ${h.name}`} value={h} />)}<button className="secondary" onClick={() => edit(5)}>大会実績を修正</button></div>}
     </article>)}
     <div className="details"><h3>参加可能時間</h3><p>{data.time}</p><p>応募チーム・対戦方式によっては試合開始が16:00になる場合があります。</p><button className="secondary" onClick={() => edit(6)}>参加可能時間を修正</button></div>
-    <p className="notice">{production ? '内容を確認し、編集コードと再確認IDを手元に保存してから「応募を送信」を押してください。' : '内容を確認し、下の試験保存へ進んでください。正式な応募受付は行いません。'}</p>
+    {production ? <div className="notice">
+      <p>内容を確認したら、以下の順番で応募を完了してください。</p>
+      <h3>応募送信までの流れ</h3>
+      <ol className="submission-flow">{['新規応募用の編集コードを生成', '保存票をダウンロード', '確認要項にチェック', '応募を送信'].map((label, i) => <li key={label}>【{label}】{i < 3 && <span aria-hidden="true">↓</span>}</li>)}</ol>
+    </div> : <p className="notice">内容を確認し、下の試験保存へ進んでください。正式な応募受付は行いません。</p>}
   </>;
 }
