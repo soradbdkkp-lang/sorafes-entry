@@ -11,7 +11,7 @@ const committed = { ok: true, receipt: 'FAC-2026-000001', version: 1, requestId:
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 // 実コンポーネントのイベント・非同期処理を実行。DOM/ブラウザ描画は対象外。
-function mount(reply, { productionMode = true, ready = false } = {}) {
+function mount(reply, { productionMode = true, ready = false, closed = false } = {}) {
   const slots = []; let cursor = 0, first = true, blocked = false, completion;
   const requests = [], effects = [];
   const hooks = {
@@ -21,6 +21,7 @@ function mount(reply, { productionMode = true, ready = false } = {}) {
   };
   const localFetch = async (_url, options) => {
     const payload = JSON.parse(options.body); requests.push(payload);
+    if (payload.action === 'settings' && closed) return Response.json({ ok: false, code: 'CLOSED' });
     if (payload.action === 'settings') return Response.json({ ok: true, mode: 'production', tournamentId: 'frog-assemble-2026', deadline: '2026-10-24T14:59:00Z' });
     return Response.json(await reply(payload));
   };
@@ -44,7 +45,7 @@ function mount(reply, { productionMode = true, ready = false } = {}) {
   const button = label => nodes().find(n => n.type === 'button' && text(n) === label);
   const field = label => nodes().find(n => n.type === 'label' && text(n).startsWith(label)).props.children.find(n => n.type === 'input');
   render();
-  return { render, requests, button, field, draft, blocked: () => blocked, completion: () => completion,
+  return { render, requests, button, field, draft, nodes, text: () => text(tree), setReady(value) { ready = value; render(); }, blocked: () => blocked, completion: () => completion,
     locked: () => nodes().find(n => n.type === 'fieldset').props.disabled,
     message: () => text(nodes().find(n => n.props?.role === 'status')),
     recover() { field('編集コード').props.onChange({ target: { value: code } }); field('再確認ID').props.onChange({ target: { value: id } }); render(); button('IDとコードで保存結果を確認').props.onClick(); },
@@ -111,3 +112,71 @@ for (const unknown of [false, true]) {
     assert.equal(ui.button('応募を送信').props.disabled, true);
   });
 }
+
+
+test('STEP 8で生成→保存確認→送信の順に解禁し、連打でも1要求になる', async () => {
+  const ui = mount(payload => ({ ...committed, requestId: payload.requestId }), { ready: true });
+  await flush(); ui.render();
+  assert.equal(ui.button('応募を送信').props.disabled, true);
+  ui.button('応募を送信').props.onClick();
+  assert.equal(ui.requests.length, 1);
+  assert.match(ui.text(), /編集コードを生成し/);
+  const generate = ui.button('新規応募用の編集コードを生成').props.onClick;
+  generate(); ui.render();
+  const firstCode = ui.field('編集コード').props.value;
+  generate(); ui.render();
+  assert.equal(ui.field('編集コード').props.value, firstCode);
+  assert.equal(ui.button('応募を送信').props.disabled, true);
+  assert.equal(ui.field('編集コード').props.readOnly, true);
+  const code = ui.field('編集コード').props.value, id = ui.field('再確認ID').props.value;
+  assert.match(code, /^(?:[A-F0-9]{4}-){7}[A-F0-9]{4}$/);
+  assert.match(id, /^[a-f0-9-]{36}$/);
+  ui.nodes().find(n => n.type === 'input' && n.props.type === 'checkbox').props.onChange({ target: { checked: true } }); ui.render();
+  assert.equal(ui.button('応募を送信').props.disabled, false);
+  const send = ui.button('応募を送信').props.onClick; send(); send();
+  await flush(); ui.render();
+  const creates = ui.requests.filter(r => r.action === 'create');
+  assert.equal(creates.length, 1); assert.equal(creates[0].editCode, code); assert.equal(creates[0].requestId, id);
+  assert.equal(ui.completion().recoveryId, id);
+});
+
+test('前STEPで修正してSTEP 8へ戻っても生成済み認証情報と保存確認を保持する', async () => {
+  const ui = mount(payload => ({ ...committed, requestId: payload.requestId }), { ready: true });
+  await flush(); ui.render(); ui.prepare();
+  const code = ui.field('編集コード').props.value, id = ui.field('再確認ID').props.value;
+  ui.setReady(false); ui.draft.players[0].name = '架空修正';
+  assert.equal(ui.button('新規応募用の編集コードを生成'), undefined);
+  ui.setReady(true);
+  assert.equal(ui.field('編集コード').props.value, code); assert.equal(ui.field('再確認ID').props.value, id);
+  assert.equal(ui.button('新規応募用の編集コードを生成'), undefined);
+  assert.equal(ui.button('応募を送信').props.disabled, false);
+  ui.button('応募を送信').props.onClick(); await flush();
+  assert.equal(ui.requests[1].draft.players[0].name, '架空修正');
+  assert.equal(ui.requests[1].requestId, id); assert.equal(ui.requests[1].editCode, code);
+});
+
+test('CLOSED設定ではSTEP 8の送信位置を示すが、保存確認後も送信しない', async () => {
+  const ui = mount(() => { throw Error('must not send'); }, { ready: true, closed: true });
+  await flush(); ui.render(); ui.prepare();
+  assert.equal(ui.button('応募を送信').props.disabled, true);
+  ui.button('応募を送信').props.onClick(); await flush();
+  assert.equal(ui.requests.length, 1); assert.match(ui.text(), /現在、送信できません/);
+});
+
+test('既存応募読込後はコードを維持し、更新用IDの保存確認から更新する', async () => {
+  let ui;
+  ui = mount(payload => payload.action === 'read' ? { ...committed, draft: ui.draft } : { ...committed, version: 2, requestId: payload.requestId });
+  await flush(); ui.render();
+  ui.field('編集コード').props.onChange({ target: { value: code } });
+  ui.field('受付番号').props.onChange({ target: { value: committed.receipt } }); ui.render();
+  ui.button('応募を読み込んで編集').props.onClick(); await flush(); ui.setReady(true);
+  assert.equal(ui.field('編集コード').props.value, code);
+  assert.equal(ui.button('応募を送信'), undefined);
+  assert.equal(ui.button('応募内容を更新').props.disabled, true);
+  ui.nodes().find(n => n.type === 'input' && n.props.type === 'checkbox').props.onChange({ target: { checked: true } }); ui.render();
+  const id = ui.field('再確認ID').props.value;
+  ui.button('応募内容を更新').props.onClick(); await flush(); ui.render();
+  assert.equal(ui.requests[2].action, 'update'); assert.equal(ui.requests[2].editCode, code);
+  assert.equal(ui.requests[2].requestId, id); assert.equal(ui.requests[2].expectedVersion, 1);
+  assert.equal(ui.completion().updated, true);
+});
