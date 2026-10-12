@@ -1,6 +1,10 @@
 :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #f1f3f2; background: #101211; font-synthesis: none; line-height: 1.7; --accent: #8adb9c; --border: #354d3b; }
 * { box-sizing: border-box; }
 body { margin: 0; }
+/* Keep existing spacing when insets are zero; cover also needs landscape protection. */
+body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+/* Padding alone scrolls away: mask content beneath the status bar while scrolling. */
+body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top, 0px); background: #101211; z-index: 1; pointer-events: none; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .45; cursor: default; }
@@ -10,6 +14,7 @@ h1 { font-size: clamp(1.7rem, 5vw, 2.8rem); line-height: 1.3; margin-bottom: 12p
 h2 { font-size: 1.6rem; } h3 { font-size: 1.1rem; }
 .site-header { border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 20px max(20px, calc((100vw - 1120px) / 2)); gap: 16px; }
 .site-header strong { letter-spacing: .12em; } .site-header div > span { display: block; color: #acb6af; font-size: .8rem; }
+.site-header { padding-top: max(20px, env(safe-area-inset-top, 0px)); }
 main { max-width: 1120px; padding: 40px 20px 60px; margin: auto; }
 .intro { margin-bottom: 28px; } .intro p { color: #b3bcb6; }
 .eyebrow { color: var(--accent) !important; letter-spacing: .12em; font-size: .75rem; font-weight: 700; }
@@ -44,6 +49,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); width: 20
 .primary { background: var(--accent); color: #101b13; border: 1px solid var(--accent); }
 .secondary { background: transparent; color: #e1e7e3; border: 1px solid #56615a; }
 footer { border-top: 1px solid var(--border); padding: 24px; color: #b3bcb6; text-align: center; font-size: .8rem; }
+footer { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
 .error-panel { border: 1px solid #dc9393; background: #322020; padding: 20px; margin-bottom: 24px; }
 .error-link { background: none; border: 0; color: #ffcaca; text-align: left; text-decoration: underline; padding: 6px 0; }
 .overview dd { overflow-wrap: anywhere; }
