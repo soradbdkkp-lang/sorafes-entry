@@ -6,6 +6,8 @@ import { adminRequest } from '../worker/admin.mjs';
 import { handleRequest } from '../worker/index.mjs';
 import { build } from 'esbuild';
 import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -149,9 +151,23 @@ test('admin 個人・6人チーム・キラー・欠損・検索', () => {
   assert.throws(() => projectEntry({ receipt, version: 1, status: 'prepared' }));
 });
 test('admin 独立Apps Scriptは読取のみ・認証拒否・安全な投影', async () => {
+  execFileSync(process.execPath, ['scripts/build-admin-apps-script.mjs']);
+  const manifest = JSON.parse(readFileSync('.wrangler/admin-apps-script/appsscript.json', 'utf8'));
+  assert.deepEqual(manifest.oauthScopes, ['https://www.googleapis.com/auth/spreadsheets.readonly']);
+  assert.deepEqual(manifest.dependencies.enabledAdvancedServices, [{ userSymbol: 'Sheets', serviceId: 'sheets', version: 'v4' }]);
   const bundle = await build({ entryPoints: ['apps-script/admin-server.ts'], bundle: true, write: false, format: 'iife', globalName: 'Admin' });
-  const context = vm.createContext({ PropertiesService: { getScriptProperties: () => ({ getProperty: k => k === 'ADMIN_RELAY_SECRET' ? env.ADMIN_RELAY_SECRET : 'fake-id' }) }, SpreadsheetApp: { openById: () => ({ getSheetByName: () => ({ getDataRange: () => ({ getValues: () => [['記録日時UTC', '処理状態', '受付番号', '認証管理JSON', '操作JSON'], row()] }) }) }) } });
+  let calls = 0, response = { valueRanges: [{ values: [['処理状態', '受付番号'], ['committed', receipt]] }, { values: [['操作JSON'], [row()[4]]] }] };
+  const context = vm.createContext({ PropertiesService: { getScriptProperties: () => ({ getProperty: k => k === 'ADMIN_RELAY_SECRET' ? env.ADMIN_RELAY_SECRET : 'fake-id' }) }, Sheets: { Spreadsheets: { Values: { batchGet: (id, options) => {
+    calls++; assert.equal(id, 'fake-id'); assert.deepEqual(Array.from(options.ranges), ["'認証管理'!B:C", "'認証管理'!E:E"]); assert.equal(options.majorDimension, 'ROWS'); return response;
+  } } } } });
   vm.runInContext(bundle.outputFiles[0].text, context);
-  assert.equal(context.Admin.handleAdmin({ action: 'entries', secret: 'wrong' }).code, 'DENIED');
-  assert.equal(context.Admin.handleAdmin({ action: 'entries', secret: env.ADMIN_RELAY_SECRET }).entries.length, 1);
+  for (const secret of [undefined, 'wrong']) assert.equal(context.Admin.handleAdmin({ action: 'entries', secret }).code, 'DENIED');
+  assert.equal(calls, 0);
+  const result = context.Admin.handleAdmin({ action: 'entries', secret: env.ADMIN_RELAY_SECRET });
+  assert.equal(result.entries.length, 1); assert.equal(calls, 1); assert.ok(!JSON.stringify(result).includes('must-not-return'));
+  for (const invalid of [{}, { valueRanges: [] }, { valueRanges: [{ values: [['bad']] }, { values: [] }] }]) {
+    response = invalid; assert.equal(context.Admin.handleAdmin({ action: 'entries', secret: env.ADMIN_RELAY_SECRET }).code, 'UNKNOWN');
+  }
+  assert.equal(context.Admin.doGet, undefined);
+  assert.ok(!/SpreadsheetApp|\.setValues?\(|\.append\(|\.update\(|\.batchUpdate\(/.test(bundle.outputFiles[0].text));
 });

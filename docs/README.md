@@ -1,5 +1,11 @@
 # 設計ドキュメント索引
 
+## 管理画面の本番準備（2026-10-13）
+
+最新：[readonly読取修正完了](admin-production-preparation.md#2026-10-13-readonly読取修正完了)。Advanced Sheets Service v4・readonly scopeのみへ変更し、管理Web App v2で正常読取成功。URL変更なし、Worker設定・pushなし。以下の停止記録は修正前の履歴。
+
+[最新の準備結果](admin-production-preparation.md#2026-10-13-本番設定準備結果公開不可停止)：管理Apps Script v1配備、Worker管理Secret4件とADMIN_ENABLED=falseを次回配備用に保存。正常読取失敗とreadonly scopeの不整合を確認し停止。管理commitは未push、管理コード本番未反映。修正・再検証前は公開不可。
+
 ## 運営管理画面のローカル追加（2026-10-12）
 
 最新の [認証・読取バックエンド準備](admin-production-preparation.md)：Access不採用へ変更。Worker内のパスワード・署名Cookie・セッション失効・永続試行制限をローカル実装。独立Apps Scriptとの共有Secretは維持。本番設定・Google操作・pushなし。Access向け記述は履歴。

@@ -1,5 +1,40 @@
 # 運営管理の認証・読取バックエンド準備
 
+## 2026-10-13 readonly読取修正完了
+
+以下の停止原因を修正した。管理用Apps ScriptのみをAdvanced Sheets Service v4のSheets.Spreadsheets.Values.batchGetへ変更。ADMIN_AUTH_IDが指す本番認証管理ファイルの「認証管理」B:C（状態・受付番号）とE（操作JSON）を1回で取得する。他ファイルIDは不要。A（記録日時）とD（認証管理JSON）は取得しない。操作JSONから従来の最新committed投影を行い、preparedのみ・試験5IDを除外する。
+
+manifestのdependencies.enabledAdvancedServicesにSheets/sheets/v4を設定。OAuth scopeはspreadsheets.readonlyのみで、書込scope・external_requestは追加しない。Google側のサービス一覧でもSheets登録を確認。
+
+独立管理Web Appを既存配備のversion 2（画面表示2026/10/13 1:27 JST）へ更新。同じexec URLを維持し、Worker Secret4件は変更なし。追加の認可画面は出ず、正しい共有SecretのPOSTはok:true、通常表示0件を確認。無Secret・誤Secret POSTはDENIEDでentriesなし。GETはdoGet未定義でデータなし。応募情報・Secret・配備URL実値は記録していない。
+
+readonly権限による実読取が成功し、既知の読取阻害要因は解消。実環境の通常対象は0件のため、内容表示・最新版判定は架空データのローカルテストで確認する。本番管理UI・Cookie・Durable Objectの実環境検証は管理コード配備後の残工程。ADMIN_ENABLED=falseを維持し、Worker設定変更・deploy・pushは行っていない。
+
+全91テスト、型チェック、production build、Wrangler dry-run成功。sandboxのVite EPERMは承認後の再実行で解消。変更は管理読取ソース・生成スクリプト・管理テスト・関連文書のみ。既存保存処理・採番・recover・Spreadsheet行・PRODUCTION_ENABLED/NEXTは未変更。今回commit指示はないため変更は未commit。push候補には今回修正を含めて別途確定し、公開前にfalseの反映と本番binding/migrationを確認する。
+
+## 2026-10-13 本番設定準備結果：公開不可・停止
+
+対象commit `d2979c3704fafcd1104a1f54d3015d51289bb113` は未push。以下を最新状態とし、本文の外部未実施という記録はローカル実装時の履歴とする。
+
+- 独立「sorafes-entry 運営応募読取」をWeb App version 1として新規配備。所有者実行・全員アクセス、manifestはspreadsheets.readonlyのみ。既存保存Apps Scriptは未変更。
+- Script PropertiesのADMIN_RELAY_SECRET・ADMIN_AUTH_IDはユーザー入力・保存後に設定存在を確認。実値は記録しない。
+- Worker管理Secret4件を暗号化済みとして確認。ADMIN_PASSWORD・ADMIN_SESSION_SECRET・ADMIN_RELAY_SECRETはユーザー入力、ADMIN_APPS_SCRIPT_URLは新規配備先。暗号化された値の長さ・両側の一致は独立検証できていない。
+- ADMIN_ENABLED=falseとSecretはSaveで次回配備用に準備。deployは実行していない。確認時点の稼働版は9e8b7dabが100%、既存commit 190ce8d32dcf289041db7b0ab324f359c06b6085。新しい設定の本番実行環境への反映とは区別する。
+- ADMIN_AUTH / AdminAuth / admin-auth-v1（new_sqlite_classes）はローカル設定済み。本番binding・migrationは未適用。初回の管理コード配備時に専用SQLite Durable Objectを作成する。既存応募ストレージの移行はない。
+- 管理Apps Scriptの直接GETはデータなし。無Secret・誤Secret POSTはDENIED、応募データなし（HTTP 200の拒否JSON）。正しい共有Secretでもok:falseとなり、正常読取は失敗した。
+- 現行本番の管理API GETは404でデータなし。管理URLは既存SPAのフォールバック。管理コード反映後はADMIN_ENABLED=falseならloginを含む管理経路を403、有効化後も管理APIは未認証403とする。
+- 応募者トップGETは200、既存応募APIのGETは405。正式応募送信・recover・シート行編集・PRODUCTION_ENABLED/NEXT変更は行っていない。
+
+### 停止理由と修正提案（未実施）
+
+管理読取コードのSpreadsheetApp.openByIdはGoogle公式仕様でspreadsheetsスコープを要求し、現在のreadonly manifestと不整合。正常読取失敗を確認したが、Google実行ログの例外詳細は未確認。readonlyだけでこのメソッドが動くとした前工程の判断を訂正する。書込スコープを追加せず、AGENTS.mdの「要件と実装が矛盾する場合は作業を止め、矛盾と影響を報告する」に従って停止した。
+
+修正案は、独立管理用コードだけをGoogle Sheets APIのvalues.getによるGET読取へ変更すること。spreadsheets.readonlyを保持し、UrlFetchAppに必要なscript.external_requestを追加する。ローカル実装・検証後、管理用だけの再認可・再配備・正常読取確認が必要。現時点で採用・変更・追加権限付与はしていない。
+
+将来のWrangler deployではダッシュボードのVariable保持を確認すること。keep-varsなしではADMIN_ENABLEDが上書きされ得る（欠落しても403）。Secretsは別扱い。公開前にfalseの実反映、認証・正常読取・試験除外・最新版判定を再確認する。
+
+参照：[SpreadsheetApp.openById](https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet-app#openById(String))、[Sheets values.getのreadonly scope](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/get)、[UrlFetchAppの必要scope](https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app)、[Wrangler deploy keep-vars](https://developers.cloudflare.com/workers/wrangler/commands/workers/)。
+
 2026-10-12。ユーザーはCloudflare Zero Trust / Accessを使用しない方針へ変更した。Workerの単一運営者パスワード認証へ切り替え、ローカル実装・テスト・commitまで承認。push・本番設定・Google操作は今回行わない。対象初期commitは `68a80c0cab28596d07374a17af84c917bba1d0f1`。
 
 ## 採用した構成
