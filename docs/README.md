@@ -24,6 +24,7 @@ Phase 3の試験保存を接続し、全5応募形式と人数別の実保存・
 | --- | --- |
 | [requirements.md](requirements.md) | 共通要件、初回大会設定、取得情報、未確定事項 |
 | [entry-submit-ux-verification.md](entry-submit-ux-verification.md) | STEP 8内の編集コード生成・保存確認・送信導線、認証保持、ローカル75テストと画面検証、本番未反映 |
+| [step-layout-verification.md](step-layout-verification.md) | STEP外への既存応募入口分離、STEP先頭へのスクロール、ローカル78テスト・画面検証、本番未反映 |
 | [entry-flow.md](entry-flow.md) | 画面順序、条件付き表示、確認・受付・編集・重複の導線 |
 | [data-model.md](data-model.md) | 概念モデル、関係、責務、保存連携の境界 |
 | [implementation-plan.md](implementation-plan.md) | フェーズ、依存関係、検証・公開条件 |

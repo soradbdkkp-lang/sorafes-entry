@@ -35,7 +35,11 @@ export default function App({ localMode = false, googleMode = false, phase5Mode 
   const inFlight = useRef(false);
   const errorHeading = useRef<HTMLHeadingElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { heading.current?.focus(); }, [step]);
+  const [reviewTarget, setReviewTarget] = useState<HTMLDivElement | null>(null);
+  useEffect(() => {
+    heading.current?.focus({ preventScroll: true });
+    heading.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [step]);
   const update = (index: number, patch: Partial<Player>) => setPlayers(previous => previous.map((p, i) => i === index ? { ...p, ...patch } : p));
   const resize = (n: number) => { setCount(n); if (representative >= n) setRepresentative(0); };
   const activePlayers = players.slice(0, count);
@@ -94,10 +98,10 @@ export default function App({ localMode = false, googleMode = false, phase5Mode 
       <div className="intro"><p className="eyebrow">ENTRY / {config.date}</p><h1>{config.name}</h1><p>参加する仲間の情報を、順番に入力してください。</p></div>
       <aside className="notice">{productionMode ? '入力内容を確認して応募してください。保存後に表示される受付番号・編集コード・再確認IDは、応募内容の確認や修正に必要です。' : productionPreview ? '公開時の文言と操作を確認するローカルプレビューです。Googleへ送信せず、入力した内容はサーバー再起動で消えます。実応募はまだ受け付けていません。' : localMode ? phase5Mode ? "Phase 5の重複チェックを架空データだけで試す画面です。Googleへ送信せず、保存先はサーバーのメモリ内です。本番受付ではありません。" : googleMode ? "Phase 4のGoogle試験です。架空データのみ使用してください。応募一覧はリンク閲覧可能で、保存情報は削除しません。本番受付ではありません。" : "Phase 4のローカル試験です。Googleへ送信しません。本番受付ではありません。" : <>架空データ専用の試験フォームです。設定完了後、「架空データを試験保存」で指定スプレッドシートへ保存します。保存情報は削除せず、リンクを知っている全員が閲覧できます。未送信の入力は再読み込みで消えます。本番応募は受け付けていません。</>}</aside>
       <div className="layout"><nav aria-label="入力の進捗"><ol className="steps">{steps.map((label, i) => <li key={label}><button type="button" aria-current={step === i ? 'step' : undefined} onClick={() => go(i)}><span className="number">{i + 1}</span>{label}</button></li>)}</ol></nav>
-      <section className="form-panel"><p className="eyebrow">STEP {step + 1} / {steps.length}</p><h2 tabIndex={-1} ref={heading}>{steps[step]}</h2>
+      <section className="form-panel"><p className="eyebrow">STEP {step + 1} / {steps.length}</p><h2 tabIndex={-1} ref={heading} style={{ scrollMarginTop: '4rem' }}>{steps[step]}</h2>
       {issues.length > 0 && <div className="error-panel" role="alert"><h3 tabIndex={-1} ref={errorHeading}>入力内容を確認してください</h3><ul>{issues.map((issue, i) => <li key={i}><button className="error-link" onClick={() => { setStep(issue.step); setIssues(issues.filter(e => e.step === issue.step)); }}>{issue.message}</button></li>)}</ul></div>}
       {step === 7 && <Review draft={draft} config={config} edit={edit} killerName={id => killerCatalog.items.find(k => k.id === id)?.name ?? id} production={productionMode} />}
-      {localMode && <LocalEntry draft={draft} ready={step === 7} load={loadLocal} block={setLocalBlocked} googleMode={googleMode} phase5Mode={phase5Mode} productionPreview={productionPreview} productionMode={productionMode} appsScriptMode={appsScriptMode} complete={setCompletion} />}
+      <div ref={setReviewTarget} />
       {!localMode && step === 7 && <div className="details"><h3>架空データの保存試験</h3><label className="check"><input type="checkbox" checked={testConsent} disabled={saveState === 'saving' || saveState === 'unknown'} onChange={e => setTestConsent(e.target.checked)} />全員の情報が架空データであり、保存情報を削除しないこと・リンク閲覧を確認しました。</label><button type="button" className="primary" disabled={!testConsent || saveState === 'saving' || saveState === 'saved'} onClick={save}>{saveState === 'saving' ? '試験保存中…' : saveState === 'unknown' ? '同じ内容で保存結果を再確認' : '架空データを試験保存'}</button>{saveMessage && <p role="status">{saveMessage}</p>}<p className="hint">結果不明の場合は画面を閉じず再確認してください。再読み込み後の復旧は未対応です。受付番号・編集コードは発行しません。</p></div>}
       {step === 0 && <><dl className="overview"><div><dt>開催日</dt><dd>{config.date}</dd></div><div><dt>開始時刻</dt><dd>未定（最早16:00開始の案）</dd></div><div><dt>応募締切</dt><dd>{config.deadline}</dd></div><div><dt>基本定員</dt><dd>{config.capacity}</dd></div></dl><div className="details"><h3>参加前の確認要項</h3><p>応募多数の場合は抽選</p><p>全員のXアカウントは応募時点で作成から3か月以上経過している必要があります。</p><p>当選者には代表者のXアカウントのDMへ、大会Discordサーバーの招待URLを送付します。</p>{productionUi ? <><p>応募情報は運営限定の履歴へ残し、そらふぇすが運営する大会でのみ使用されます。</p><p>編集コードは本番応募一覧や履歴へ保存しません。コードを紛失した場合は <a href="https://x.com/sora_kkp_game" target="_blank" rel="noreferrer">運営Xアカウント</a>へご相談ください。</p><p className="hint">Discord ID、メールアドレス、電話番号、本名、住所など、フォームで求めていない情報は入力しないでください。</p></> : <p className="hint">正式な注意事項は準備中です。</p>}</div></>}
       {step === 1 && <fieldset><legend>応募形式を選択</legend><div className="choices">{config.entries.map(e => <label className={`choice ${kind === e.id ? 'selected' : ''}`} key={e.id}><input type="radio" name="entry" checked={kind === e.id} onChange={() => { setKind(e.id); resize(e.count); }} /><span><strong>{e.label}</strong><span className="hint">{e.note}</span></span></label>)}</div></fieldset>}
@@ -112,6 +116,7 @@ export default function App({ localMode = false, googleMode = false, phase5Mode 
       {step === 6 && <><p>メンバー全員の予定を確認して回答してください。</p><p className="notice">応募チーム・対戦方式によっては試合開始が16:00になる場合があります。18:00以降の希望は開始時刻を保証するものではありません。</p><fieldset><legend>参加可能時間（必須）</legend><div className="choices">{config.availability.map(v => <label key={v} className={`choice ${time === v ? 'selected' : ''}`}><input type="radio" name="time" checked={time === v} onChange={() => setTime(v)} />{v}</label>)}</div></fieldset></>}
       <div className="actions"><button type="button" className="secondary" disabled={step === 0} onClick={() => go(step - 1)}>戻る</button>{step < 7 && <button type="button" className="primary" onClick={() => go(editing ? 7 : step + 1)}>{editing || step === 6 ? '確認画面へ' : '次へ'} <span aria-hidden="true">→</span></button>}</div>
       </section></div>
+      {localMode && <LocalEntry draft={draft} ready={step === 7} load={loadLocal} block={setLocalBlocked} googleMode={googleMode} phase5Mode={phase5Mode} productionPreview={productionPreview} productionMode={productionMode} appsScriptMode={appsScriptMode} complete={setCompletion} reviewTarget={reviewTarget} />}
     </main><footer>{config.brand} / sorafes-entry · {productionMode ? '大会エントリー' : productionPreview ? '公開前確認' : 'フォームUIプレビュー'}</footer>
   </>;
 }

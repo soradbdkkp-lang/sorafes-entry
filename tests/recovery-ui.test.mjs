@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { createRequire } from 'node:module';
 
-const bundle = await build({ entryPoints: ['src/components/LocalEntry.tsx'], bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react', 'react/jsx-runtime'] });
+const bundle = await build({ entryPoints: ['src/components/LocalEntry.tsx'], bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react', 'react/jsx-runtime', 'react-dom'] });
 const require = createRequire(import.meta.url);
 const id = '00000000-0000-4000-8000-000000000001';
 const code = 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF-0000-1111'; // 架空
@@ -11,7 +11,7 @@ const committed = { ok: true, receipt: 'FAC-2026-000001', version: 1, requestId:
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 // 実コンポーネントのイベント・非同期処理を実行。DOM/ブラウザ描画は対象外。
-function mount(reply, { productionMode = true, ready = false, closed = false } = {}) {
+function mount(reply, { productionMode = true, ready = false, closed = false, separated = true } = {}) {
   const slots = []; let cursor = 0, first = true, blocked = false, completion;
   const requests = [], effects = [];
   const hooks = {
@@ -26,13 +26,13 @@ function mount(reply, { productionMode = true, ready = false, closed = false } =
     return Response.json(await reply(payload));
   };
   const module = { exports: {} };
-  new Function('require', 'module', 'exports', 'fetch', bundle.outputFiles[0].text)(name => name === 'react' ? hooks : require(name), module, module.exports, localFetch);
+  new Function('require', 'module', 'exports', 'fetch', bundle.outputFiles[0].text)(name => name === 'react' ? hooks : name === 'react-dom' ? { createPortal: (children, target) => ({ type: 'portal', props: { children, target } }) } : require(name), module, module.exports, localFetch);
   const history = { name: '', appearances: '', wins: '', runnersUp: '' };
   const draft = { kind: 'solo', count: 1, representative: 0, teamName: '', time: '16:00開始でも参加可能', players: [{ name: '架空', xId: 'fictional', platform: 'Steam', otherPlatform: '', gameId: 'Fiction#0000', hours: '10', killer: false, duty: '', favorite: '', killers: [], dif: 'no', dck: 'no', other: 'no', difDetails: history, dckDetails: history, histories: [] }] };
   let tree;
   const render = () => {
     cursor = 0;
-    tree = module.exports.default({ draft, ready, productionMode, load: () => {}, block: value => { blocked = value; }, complete: value => { completion = value; } });
+    tree = module.exports.default({ draft, ready, productionMode, ...(separated ? { reviewTarget: {} } : {}), load: () => {}, block: value => { blocked = value; }, complete: value => { completion = value; } });
     first = false; while (effects.length) effects.shift()();
     return tree;
   };
@@ -179,4 +179,24 @@ test('既存応募読込後はコードを維持し、更新用IDの保存確認
   assert.equal(ui.requests[2].action, 'update'); assert.equal(ui.requests[2].editCode, code);
   assert.equal(ui.requests[2].requestId, id); assert.equal(ui.requests[2].expectedVersion, 1);
   assert.equal(ui.completion().updated, true);
+});
+
+ test('分離配置でもSTEP 8送信準備と下部のread/recoverを一つの状態で維持する', async () => {
+  const ui = mount(() => committed, { ready: true, separated: true });
+  await flush(); ui.render();
+  const portal = ui.nodes().find(n => n.type === 'portal');
+  const portalNodes = ui.nodes(portal);
+  assert.ok(portalNodes.some(n => n.type === 'button' && n.props.children === '新規応募用の編集コードを生成'));
+  assert.equal(portalNodes.some(n => n.type === 'button' && n.props.children === '応募を読み込んで編集'), false);
+  assert.ok(ui.button('応募を読み込んで編集'));
+  assert.ok(ui.button('IDとコードで保存結果を確認'));
+  ui.prepare();
+  const generated = ui.field('編集コード').props.value;
+  ui.setReady(false);
+  assert.equal(ui.nodes().some(n => n.type === 'portal'), false);
+  assert.equal(ui.field('編集コード').props.value, generated);
+  assert.equal(ui.button('応募を送信'), undefined);
+  ui.setReady(true);
+  assert.equal(ui.field('編集コード').props.value, generated);
+  assert.equal(ui.button('応募を送信').props.disabled, false);
 });
