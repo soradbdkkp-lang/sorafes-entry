@@ -1,5 +1,9 @@
 # 設計ドキュメント索引
 
+## 運営管理画面の本番検証完了（2026-10-14）
+
+[本番有効化検証完了・通常利用可](admin-production-preparation.md#2026-10-14-本番有効化検証完了通常利用可)。正常ログイン、認証済みAPI正常0件、試験5ID除外、ログアウト後拒否、誤パスワード失敗、正式受付疎通に加え、ユーザーが本番CookieのHttpOnly / Secure / SameSite=Strictを実測。ADMIN_ENABLED=true、通常Version稼働、一時診断除去済み。2026-10-14、ユーザーが全検証完了を確定し、今回の確認セッションもログアウト・失効済みと報告。以下の準備中・停止中・未配備の記述は履歴。
+
 ## 管理画面の本番準備（2026-10-13）
 
 最新：[readonly読取修正完了](admin-production-preparation.md#2026-10-13-readonly読取修正完了)。Advanced Sheets Service v4・readonly scopeのみへ変更し、管理Web App v2で正常読取成功。URL変更なし、Worker設定・pushなし。以下の停止記録は修正前の履歴。

@@ -1,5 +1,103 @@
 # 運営管理の認証・読取バックエンド準備
 
+## 2026-10-14 本番有効化検証完了・通常利用可
+
+以下を最新の完了記録とし、後続の「継続中」「未確認」「通常利用不可」は各時点の履歴として保持する。管理はADMIN_ENABLED=true、診断を含まない通常Version 29a2a8dd-2e96-4735-abcd-2ca8d3f0e816へ100%反映済み。一時診断・監視・一時ファイルは除去済み。
+
+| 確認項目 | 結果・証拠 |
+| --- | --- |
+| 未認証login | HTTP200・ログイン画面表示をツールで確認 |
+| 未認証entries / API | HTTP403・DENIED・応募データなしをツールで確認 |
+| 正常ログイン・一覧 | ユーザーが本番で正常ログイン・正常0件表示を確認 |
+| 認証済みAPI | ユーザーがok:true / entries:[]を確認。取得失敗とは区別 |
+| 試験応募除外 | 保存済み試験5件に対し通常一覧/APIが0件。FAC-2026-000001～000005が通常表示されないことを確認 |
+| Cookie属性 | ユーザーが本番の__Host-sorafes-adminについてHttpOnly=true、Secure=true、SameSite=Strictを実測。Cookie値は転記・保存しない |
+| ログアウト | ユーザーがログアウト後の/admin/entries・/api/admin/entries拒否を確認 |
+| 誤パスワード | UIで1回のみ試行し失敗表示をツールで確認。403でCookieを発行しない分岐はコード・既存テストで検証済み。上限発火試験は行わない |
+| 正式受付 | トップ・JS/CSS200、settings200 / ok:true / productionの疎通確認済み。管理検証で応募送信・Google側変更・採番操作なし |
+
+CookieのPath=/・Domainなし・1時間のMax-Ageは既存コードとローカルテストで確認した仕様であり、今回ユーザーの本番実測報告は上記3属性。測定範囲を混同しない。ツールが接続するブラウザとCodex右パネルは別セッションのため、認証後の確認とCookie実測はユーザー報告に基づく。
+
+2026-10-14、ユーザーが運営応募管理画面の全検証完了を確定し、読み取り専用管理画面は通常利用可とする。Cookie値がユーザーの確認画面に表示された今回の確認セッションについても、ユーザー報告に基づきログアウト・失効済みと記録する。先に実施したログアウト後拒否の検証とは区別し、今回のセッション失効をツールで再観測したという意味ではない。
+
+本工程の整理はdocs/README.mdと本文書のみ。Secret実値・Cookie値は記録せず、Secret・コード・Worker設定・Apps Script・Spreadsheet・正式受付設定への変更操作は行わない。ユーザー承認に基づき文書2件の差分確認後にcommitし、pushせず停止する。
+
+## 2026-10-14 再有効化テスト継続中
+
+ユーザー承認でADMIN_ENABLEDだけtrueへ反映し、通常Version 29a2a8dd-2e96-4735-abcd-2ca8d3f0e816を配備。静的資産更新なし、Secret変更なし。CookieなしHTTP確認はlogin200、entries/API403・DENIED・応募データなし。誤パスワードはUIから1回のみ試し失敗表示。正式受付のトップ・JS/CSS200、settings200 / ok:true / productionを確認した。
+
+ユーザーは別ブラウザで正常ログイン・一覧0件を確認し、続いてCodex右パネルでログイン済みと回答（右パネルの表示URLは/admin/entries）。ただし操作用ブラウザは右パネルとは別セッションであり、操作ツールによる認証済みAPI・ログアウトの直接観測はできていない。追加ログインを促した経緯があるが、それを独立した成功観測と混同しない。
+
+Cookie属性を真偽のみで観測する一時wrapper eab431e9-6237-4c44-b0dd-29c4fdf3ead7を配備したが、ログ取得が時間切れとなり結果は未確認。2026-10-14、診断を含まない通常Version 29a2a8dd-2e96-4735-abcd-2ca8d3f0e816へ100%復元成功。監視終了・一時ファイル除去済み。Cookie属性の本番実測成功とは報告しない。
+
+残る確認は、ログイン済みユーザー側で認証済みAPIのok:true / entries空配列、ログアウト後entries/API拒否、Cookie属性。確認待ち。コード・Secret・Google設定/行への変更、応募送信、Git commit/pushなし。現時点で全検証完了・通常利用可とは判定しない。
+
+## 2026-10-13 ADMIN_PASSWORD再登録・形式正常確認
+
+ユーザーがCloudflare本番のADMIN_PASSWORDだけを直接再入力・Deployし、48590a9c-803a-4715-a3d4-8419257fbe27が100%稼働したことを確認。Version metadataはUpdated secret: ADMIN_PASSWORD、ADMIN_ENABLED=false、管理用他3Secretと既存保存Secret・ADMIN_AUTH bindingを保持。実値を取得・転記しない。
+
+falseのまま一時確認wrapperを3966c5df-ed63-44d9-b1cc-25378c6f20e2へ配備し、非公開tailからpasswordPresent=true、passwordBytesValid=true、passwordWhitespaceValid=true、adminDisabledExact=trueの4真偽だけを取得。byte条件は既存20～256byte、空白条件は前後trim一致かつCR/LFなし。実際の長さ・値・ハッシュ・一部文字列は出力しない。最初のログ監視は時間切れとなったため再接続して確認した。
+
+確認後、診断のない再登録済み48590a9c-803a-4715-a3d4-8419257fbe27へ100%復元成功。認証コード・条件は変更せず、他Secret更新・管理有効化・ログイン・Apps Script操作・Spreadsheet操作・応募送信・正式受付設定変更なし。今回Git commit/pushなし。管理有効化テストは次工程。
+
+## 2026-10-13 非公開本番ランタイム診断：原因特定・元Version復元
+
+本番変更の承認に基づき、Git除外の一時wrapperだけを725c4d4e-7e03-4574-825a-52df67ec81d5として配備。管理はfalseを維持し再有効化しなかった。専用診断ヘッダー付きGET /admin/loginの1要求のみを非公開Cloudflare tailで観測。診断用公開URL・診断レスポンスは追加せず、公開応答は従来の403 / DENIEDのまま。通常リクエストは既存handlerへそのまま渡した。
+
+観測結果（すべて真偽のみ）：adminEnabledExact=false / adminDisabledExact=true（現在の意図どおり）、passwordPresent=true / passwordValid=false、sessionSecretPresent=true / sessionSecretValid=true、adminAuthBindingPresent=true / adminAuthIdMethodPresent=true / adminAuthGetMethodPresent=true、httpsValid=true / originValid=true / fetchMetadataValid=true、assetsReached=false / responseForbidden=true。
+
+原因は本番WorkerのADMIN_PASSWORDがstringとして存在するが、既存のUTF-8 20～256byte条件を満たさないこと。実値・実際の長さ・ハッシュ・一部文字列は観測ログへ出さない。ユーザー手元の形式確認と実行環境の検査結果が一致していない。どちらの境界を外れるかは取得せず、この段階では保存時入力の詳細原因を断定しない。
+
+具体的位置はadminRequest先頭のauthConfigured共通設定チェック。現在はADMIN_ENABLED=falseでも拒否されるが、それをtrueにしてもpasswordValid=falseにより拒否される。Cookie欠落・Apps Script設定・静的資産側403・DO期待メソッド欠落ではない。GET診断ではDOストレージを呼ばず、DO疎通成功を確認したという意味ではない。
+
+最小修正案はADMIN_PASSWORDだけを、所有者が条件に合う生成済み値でCloudflare Secretへ再登録し、同じ値を安全に保持すること。認証条件を緩めず、署名Secret・共有Secret・Apps Script・保存系コードは変更不要。今回は修正・Secret変更・正常ログイン・管理データ取得を行わない。次工程で所有者入力と再登録の明示承認が必要。
+
+ローカルwrapper検証では正常要求の不変、診断値がbooleanだけであること、Secretをログへ含めないことを確認。dry-run成功。一時配備では静的資産の更新なし。診断後、確認済み元Version 9681fc99-afaa-4f49-8ee7-19f61686676dへ100%復元成功。稼働コードから診断を除去し、ADMIN_ENABLED=false・既存Secret・bindingを元Versionのまま保持。tail接続は停止。診断Versionは非稼働履歴であり、公開応答に診断情報を持たない。
+
+正式受付の処理・設定・Google側への操作なし。応募送信・Spreadsheet変更・Apps Script変更・採番・recover操作なし。今回Git commit/pushなし。次工程はパスワード設定修正後に、設定検査・未認証拒否・正常ログイン・Cookie属性・管理API正常0件・ログアウト失効・既存受付不変の検証が必要。
+
+## 2026-10-13 login 403のコード診断（本番変更なし）
+
+worker/index.mjsは/admin/loginをadminRequestへ渡す。adminRequestはauthConfigured・HTTPS・Origin・Sec-Fetch-Siteを先に検査し、GET /admin/loginはadminAssetへ進む。Cookie判定はその後なのでCookieなしを原因に403とする構造ではない。
+
+authConfiguredの全条件はADMIN_ENABLEDが文字列trueに完全一致、ADMIN_PASSWORDがstringかつUTF-8で20～256byte、ADMIN_SESSION_SECRETがstringかつ半角hex64文字、ADMIN_AUTH.idFromNameとgetがfunction。どれかfalseならログインGETも403 / DENIEDとなる。URLがHTTPSでない、Originが存在してURL originと不一致、Sec-Fetch-Siteがcross-siteまたはsame-siteでも同じ応答。ASSETS.fetchの403もそのまま転送される。
+
+ADMIN_APPS_SCRIPT_URL形式とADMIN_RELAY_SECRET長さは認証済みentries APIだけの条件で、欠落時503。ログイン画面GETには関係しない。DO migrationタグやストレージ疎通の検査はGET loginでは行わない。bindingの関数存在だけを検査し、DOへ通信しない。設定上のADMIN_AUTH / AdminAuth / admin-auth-v1と前工程の本番binding存在は確認済みだが、本番DO呼出し成功の確認は未完了。
+
+Git除外対象.wrangler/diagnose-admin-login.mjsへ架空値のみのローカル診断を作成し、16ケースとHTTPS・ASSETS応答転送を検証。Cookieなし・バックエンド設定なしでも正常設定なら200、binding関数欠落等の各条件で403を再現。DOのメソッド本体をthrowにしてもlogin GETは200で、DO非呼出しも確認。実Secret・Google通信なし、診断を本番へ公開しない。
+
+本番でどの設定条件がfalseだったかは未特定。管理Settings上の登録存在と、Worker実行中の型・形式・namespaceメソッド存在を同一視できない。ユーザー申告のSecret形式は否定しない。前回のHTTP確認スクリプトはOrigin/Fetch Metadataを指定しておらずHTTPSを使用しているが、Worker側で受信した条件別の値は未観測。共通DENIEDには条件別情報がなく、ローカルだけでは本番の原因を一意に確定できない。
+
+最小の次工程案は、実値・長さ・Cookie・応募情報を出さず、設定名ごとのpresent/validとbindingの関数存在、受信リクエストのHTTPS/Origin整合を、管理者限定の観測先へ一時記録する診断。公開レスポンスや公開診断APIには出さない。本番診断の配置は今回未承認のため未実施。失敗条件確定後に当該条件だけを修正する。Cookieチェック移動や共通設定チェックの削除による回避は採用しない。
+
+今回は管理機能の再有効化、外部設定・Secret・Apps Script・Spreadsheet変更、応募送信、Git操作を行っていない。実装ファイルは未変更、診断はGit除外、文書追記のみ未commit。
+
+## 2026-10-13 有効化検証：ログイン画面403のため無効へ戻して停止
+
+直前確認は管理Secret4件・ADMIN_AUTH binding・ADMIN_ENABLED=false、GoogleのPRODUCTION_ENABLED=true / PRODUCTION_NEXT=5。独立Apps Scriptはv2、正しい共有SecretのPOSTでok:true / entries 0件、無/誤SecretはDENIED、GETデータなしを再確認した。
+
+操作直前の承認後、ADMIN_ENABLEDのみtrueへ変更し、Version 83fce68aを本番100%へ反映。ただしCookieなしGET /admin/loginが繰り返し403 / DENIEDとなり、ログイン画面を表示できなかった。/admin/entries・/api/admin/entriesも403、entries/draftなし。ブラウザの本番URL遷移もERR_BLOCKED_BY_CLIENTで利用できず、ブラウザ固有の制限とHTTP検証結果は区別する。
+
+authConfiguredはADMIN_PASSWORDの20～256byte、ADMIN_SESSION_SECRETの半角hex64文字、ADMIN_AUTH bindingを検査する。Secretの暗号化登録存在は確認できるが実値の形式条件は未確認。原因は未確定であり、パスワード誤りと断定しない。正しいログイン・Cookie属性・認証後API・UI一覧・ログアウト失効・誤パスワード試験は未実施。
+
+安全のためADMIN_ENABLEDだけfalseへ戻し、Version 9681fc99が本番100%、Settings falseを確認。Secret・コード・Apps Scriptは変更しない。ユーザーは保存時のADMIN_PASSWORD・ADMIN_SESSION_SECRETが両方とも条件どおりと回答した。実行環境の値を取得していないため原因は依然未確定。管理機能の通常利用は不可。追加診断は別工程で、実値を出さず設定条件の真偽のみを検証する必要がある。
+
+正式受付はPRODUCTION_ENABLED=true / NEXT=5維持。応募一覧5行、トップHTTP200、JS/CSS200、settings200 / ok:true / productionを確認。応募送信・行編集・採番・recover操作なし。settingsの既存仕様によるPRODUCTION_TRAFFIC更新以外は操作しない。今回の文書追記は未commit・未push。
+
+## 2026-10-13 管理無効のまま本番配備・安全確認完了
+
+readonly修正commitは750e3d2114663ba7fe1e08f92ec1359ef6608455。origin/mainをfetchして確認後、68a80c0 → d2979c3 → 750e3d2の管理関連3件をmainへpush。想定外commitなし、push前作業ツリーclean、Secretパターン検査検出0件。
+
+Workers BuildsのDeploy commandをnpx wrangler deploy --keep-varsへ変更し、保存済みVariableを保持。本番BuildはReady 24s、Version e271ffa6-ec74-4110-b30c-c0b5851eefcdが100%。本番ADMIN_AUTH bindingはsorafes-entry_AdminAuthに接続され、admin-auth-v1のSQLite新規class配備を反映。管理Secret4件の名前とADMIN_ENABLED=falseを本番Settingsで確認。Secret実値は変更していない。
+
+配備後HTTP確認：/admin/login・/admin/entries・/api/admin/entriesはいずれも403、DENIED、no-store、entries/draftなし。管理ログイン・データ取得は実施していない。応募者/、JS、CSSは200、既存settings POSTは200・ok:true・production・no-store。応募APIのGETは従来どおり405。新規応募を実送信した成功確認は行わず、既存経路の不変とsettings疎通で確認した。
+
+Google本番Propertiesを表示のみで確認し、PRODUCTION_ENABLED=true、PRODUCTION_NEXT=5が前後で一致。保存先のA列のみを読取り、ヘッダー除外で応募一覧5・履歴5・認証10行を確認。行編集・保存Apps Script変更・正式応募送信・recover操作なし。settingsの既存仕様によるPRODUCTION_TRAFFIC更新のみあり得る。
+
+管理Apps Scriptは前工程のv2・同一URL・readonly成功・無/誤Secret拒否・GETデータなしの結果を維持し、今回は再配備・URL更新なし。
+
+管理コードの配備と無効状態の拒否確認は完了。有効化は別途明示承認後とし、本番Cookie・ログイン・失効・レート制限・認証後読取の確認は残る。今回trueへの変更は行わず停止。この実施記録は配備後の未commit追記で、追加pushはしていない。
+
 ## 2026-10-13 readonly読取修正完了
 
 以下の停止原因を修正した。管理用Apps ScriptのみをAdvanced Sheets Service v4のSheets.Spreadsheets.Values.batchGetへ変更。ADMIN_AUTH_IDが指す本番認証管理ファイルの「認証管理」B:C（状態・受付番号）とE（操作JSON）を1回で取得する。他ファイルIDは不要。A（記録日時）とD（認証管理JSON）は取得しない。操作JSONから従来の最新committed投影を行い、preparedのみ・試験5IDを除外する。
