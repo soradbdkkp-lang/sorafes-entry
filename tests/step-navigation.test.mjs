@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const bundle = await build({ entryPoints: ['src/App.tsx'], bundle: true, write: false, format: 'cjs', platform: 'node', external: ['react', 'react/jsx-runtime', 'react-dom'] });
-function mount() {
+function mount(now = '2026-10-24T14:00:00Z') {
   const slots = [], effects = []; let cursor = 0, tree;
   const calls = [];
   const hooks = {
@@ -13,7 +13,7 @@ function mount() {
     useEffect(effect, deps) { const i = cursor++; if (!slots[i] || deps.some((x,j) => x !== slots[i][j])) effects.push(effect); slots[i] = deps; },
   };
   const module = { exports: {} };
-  new Function('require','module','exports',bundle.outputFiles[0].text)(name => name === 'react' ? hooks : require(name), module, module.exports);
+  new Function('require','module','exports','window','Date',bundle.outputFiles[0].text)(name => name === 'react' ? hooks : require(name), module, module.exports, {setInterval() {return 1;}, clearInterval() {}}, class extends Date { static now() { return Date.parse(now); } });
   const nodes = (n=tree) => !n || typeof n !== 'object' ? [] : Array.isArray(n) ? n.flatMap(x=>nodes(x)) : [n,...nodes(n.props?.children ?? null)];
   const text = n => Array.isArray(n) ? n.map(text).join('') : n && typeof n === 'object' ? text(n.props?.children) : String(n??'');
   const render = () => {
@@ -45,4 +45,14 @@ test('STEP 8の各修正リンクの移動先でもSTEP先頭へのスクロー�
   const edit=()=>ui.nodes().find(n=>typeof n.type==='function' && 'edit' in n.props).props.edit;
   ui.controller().props.load({kind:'solo',count:1,teamName:'',representative:0,time:'',players:[]});ui.render();
   for(const target of [1,2,3,4,5,6]) {edit()(target);ui.render();assert.deepEqual(ui.calls.at(-1),['scroll',{block:'start',behavior:'instant'}]);ui.controller().props.load({kind:'solo',count:1,teamName:'',representative:0,time:'',players:[]});ui.render();}
+});
+
+
+test('追加募集では1人・2人だけを選べ、他形式は受付終了と表示する', () => {
+  const ui = mount('2026-10-24T15:00:00Z');
+  ui.click('2応募形式');
+  const choices = ui.nodes().filter(n => n.type === 'input' && n.props.name === 'entry');
+  assert.deepEqual(choices.map(n => Boolean(n.props.disabled)), [true, false, false, true, true]);
+  assert.match(ui.text(ui.nodes()), /追加募集中/);
+  assert.match(ui.text(ui.nodes()), /受付終了/);
 });

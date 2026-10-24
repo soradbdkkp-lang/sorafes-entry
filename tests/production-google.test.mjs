@@ -17,6 +17,11 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const history = () => ({ name: '', appearances: '', wins: '', runnersUp: '' });
 
 function fixture() {
+  let clock = Date.parse('2026-10-24T14:00:00.000Z');
+  class Clock extends Date {
+    constructor(...args) { super(...(args.length ? args : [clock])); }
+    static now() { return clock; }
+  }
   const props = new Map(Object.entries({
     PRODUCTION_ENABLED: 'true',
     PRODUCTION_AUTH_ID: 'production-auth',
@@ -51,6 +56,7 @@ function fixture() {
     },
   }));
   const context = vm.createContext({
+    Date: Clock,
     PropertiesService: { getScriptProperties: () => ({
       getProperty: key => props.get(key) ?? null,
       setProperty: (key, value) => props.set(key, value),
@@ -83,6 +89,7 @@ function fixture() {
     page: () => clone(context.Production.doGet()),
     sheets,
     props,
+    time(value) { clock = Date.parse(value); },
     fail(at, stage) { writes = 0; lastWrite = 0; fault = at ? { at, stage } : null; },
     lock(value) { locked = value; },
   };
@@ -142,7 +149,7 @@ test('本番候補は必須設定と本番モードを確認し、設定不足�
     ok: true,
     mode: 'production',
     tournamentId: 'frog-assemble-2026',
-    deadline: '2026-10-24T14:59:00.000Z',
+    deadline: '2026-10-25T14:59:00.000Z',
   });
   assert.equal(value.raw({ action: 'settings', mode: 'production', tournamentId: 'wrong' }).code, 'INVALID');
   assert.equal(value.handle({ action: 'settings', testOnly: true }).code, 'INVALID');
@@ -228,4 +235,82 @@ test('本番候補は認証失敗・版競合・排他失敗を成功扱いし�
   assert.equal(value.handle(stale).code, 'CONFLICT');
   value.lock(true);
   assert.equal(value.handle(request('solo', 1, 50)).code, 'BUSY');
+});
+
+
+test('通常締切・追加開始・追加締切の境界で新規と編集を分離する', () => {
+  for (const [time, normal, additional] of [
+    ['2026-10-24T14:58:59.999Z', true, false],
+    ['2026-10-24T14:59:00.000Z', false, false],
+    ['2026-10-24T14:59:00.001Z', false, false],
+    ['2026-10-24T14:59:59.999Z', false, false],
+    ['2026-10-24T15:00:00.000Z', false, true],
+    ['2026-10-25T14:58:59.999Z', false, true],
+    ['2026-10-25T14:59:00.000Z', false, false],
+    ['2026-10-25T14:59:00.001Z', false, false],
+  ]) {
+    for (const kind of ['solo', 'duo', 'killer', 'survivors', 'team']) {
+      const f = fixture(), initial = request('solo', 1, 100), saved = f.handle(initial);
+      f.time(time);
+      const before = JSON.stringify(f.sheets), next = f.props.get('PRODUCTION_NEXT');
+      const result = f.handle(request(kind));
+      const allowed = normal || (additional && ['solo', 'duo'].includes(kind));
+      assert.equal(result.ok, allowed, time + '/' + kind);
+      if (!allowed) { assert.equal(result.code, 'CLOSED'); assert.equal(JSON.stringify(f.sheets), before); assert.equal(f.props.get('PRODUCTION_NEXT'), next); }
+      assert.equal(f.handle(edit(initial, saved)).ok, normal, time + '/update');
+    }
+  }
+});
+
+test('追加募集では1人・2人のキラー担当可能者を含む新規応募を拒否する', () => {
+  for (const kind of ['solo', 'duo']) {
+    const f = fixture(); f.time('2026-10-24T15:00:00.000Z');
+    const req = request(kind), player = req.draft.players.at(-1);
+    Object.assign(player, { killer: true, duty: 'both', killers: ['trapper'], favorite: 'trapper' });
+    assert.equal(f.handle(req).code, 'CLOSED');
+    assert.equal(f.props.has('PRODUCTION_NEXT'), false);
+    assert.ok(f.sheets.every(sheet => sheet.rows.length === 1));
+  }
+});
+
+test('締切前のprepared・committedは締切後も同一操作で回復でき別操作は拒否する', () => {
+  for (const kind of ['solo', 'killer']) {
+    const f = fixture(), req = request(kind);
+    f.fail(2, 'before');
+    assert.equal(f.handle(req).code, 'UNKNOWN');
+    f.fail(0); f.time('2026-10-26T00:00:00.000Z');
+    const saved = f.handle({ action: 'recover', requestId: req.requestId, editCode: req.editCode });
+    assert.equal(saved.ok, true);
+    const before = JSON.stringify(f.sheets), next = f.props.get('PRODUCTION_NEXT');
+    assert.deepEqual(f.handle(req), saved);
+    assert.equal(f.handle({ ...req, requestId: randomUUID() }).code, 'CLOSED');
+    assert.equal(f.handle(edit(req, saved)).code, 'CLOSED');
+    assert.equal(JSON.stringify(f.sheets), before);
+    assert.equal(f.props.get('PRODUCTION_NEXT'), next);
+    assert.equal(f.handle({ action: 'read', receipt: saved.receipt, editCode: req.editCode }).ok, true);
+  }
+});
+
+
+test('追加募集で受理したpreparedも追加締切後に回復でき新しい更新は不可', () => {
+  const f = fixture(), req = request('duo');
+  f.time('2026-10-25T14:58:59.999Z'); f.fail(2, 'before');
+  assert.equal(f.handle(req).code, 'UNKNOWN');
+  f.fail(0); f.time('2026-10-25T14:59:00.000Z');
+  const saved = f.handle(req);
+  assert.equal(saved.ok, true);
+  assert.equal(f.handle(edit(req, saved)).code, 'CLOSED');
+  assert.equal(f.props.get('PRODUCTION_NEXT'), '1');
+  assert.equal(f.sheets[1].rows.length, 2);
+});
+
+test('通常締切前の更新preparedを締切後に回復しても新規更新は拒否する', () => {
+  const f = fixture(), initial = request('killer'), saved = f.handle(initial);
+  const update = edit(initial, saved); update.draft.players[0].name = '架空修正';
+  f.fail(2, 'before'); assert.equal(f.handle(update).code, 'UNKNOWN');
+  f.fail(0); f.time('2026-10-24T15:00:00.000Z');
+  const updated = f.handle({ action: 'recover', requestId: update.requestId, editCode: update.editCode });
+  assert.equal(updated.version, 2);
+  assert.equal(f.handle(edit(update, updated)).code, 'CLOSED');
+  assert.equal(f.props.get('PRODUCTION_NEXT'), '1');
 });

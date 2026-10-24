@@ -1,3 +1,4 @@
+import { entryDeadlineNotice } from '../config/entry-window';
 import { useEffect, useRef } from 'react';
 import type { CompletionData } from './LocalEntry';
 
@@ -12,7 +13,7 @@ export default function Completion({ value }: { value: CompletionData }) {
       `受付番号：${value.receipt}`,
       `編集コード：${value.editCode}`,
       '',
-      '応募・編集締切：2026年10月24日23:59（日本時間）',
+      entryDeadlineNotice,
     ].join('\n');
     const url = URL.createObjectURL(new Blob([contents], { type: 'text/plain;charset=utf-8' }));
     const anchor = document.createElement('a');
@@ -32,6 +33,7 @@ export default function Completion({ value }: { value: CompletionData }) {
       <div><dt>再確認ID</dt><dd>{value.recoveryId}</dd></div>
     </dl>
     <button type="button" className="primary" onClick={download}>保存票をダウンロード</button>
+    <p className="hint">{entryDeadlineNotice}</p>
     <p className="notice">受付完了は当選・参加確定を意味しません。応募多数の場合は抽選となります。</p>
     <p className="hint">保存票を安全な場所に保管してください。編集コードを紛失した場合は運営Xアカウントへご相談ください。</p>
   </section>;

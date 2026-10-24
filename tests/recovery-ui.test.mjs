@@ -11,11 +11,14 @@ const committed = { ok: true, receipt: 'FAC-2026-000001', version: 1, requestId:
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 // 実コンポーネントのイベント・非同期処理を実行。DOM/ブラウザ描画は対象外。
-function mount(reply, { productionMode = true, ready = false, closed = false, separated = true } = {}) {
+function mount(reply, { productionMode = true, ready = false, closed = false, separated = true, now = '2026-10-24T14:00:00.000Z' } = {}) {
+  let clock = Date.parse(now), tick;
+  const browserClock = { setInterval(fn) { tick = fn; return 1; }, clearInterval() {} };
+  class Clock extends Date { static now() { return clock; } }
   const slots = []; let cursor = 0, first = true, blocked = false, completion;
   const requests = [], effects = [];
   const hooks = {
-    useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }]; },
+    useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = typeof initial === 'function' ? initial() : initial; return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }]; },
     useRef(initial) { const i = cursor++; return slots[i] ??= { current: initial }; },
     useEffect(effect) { if (first) effects.push(effect); },
   };
@@ -26,7 +29,7 @@ function mount(reply, { productionMode = true, ready = false, closed = false, se
     return Response.json(await reply(payload));
   };
   const module = { exports: {} };
-  new Function('require', 'module', 'exports', 'fetch', bundle.outputFiles[0].text)(name => name === 'react' ? hooks : name === 'react-dom' ? { createPortal: (children, target) => ({ type: 'portal', props: { children, target } }) } : require(name), module, module.exports, localFetch);
+  new Function('require', 'module', 'exports', 'fetch', 'window', 'Date', bundle.outputFiles[0].text)(name => name === 'react' ? hooks : name === 'react-dom' ? { createPortal: (children, target) => ({ type: 'portal', props: { children, target } }) } : require(name), module, module.exports, localFetch, browserClock, Clock);
   const history = { name: '', appearances: '', wins: '', runnersUp: '' };
   const draft = { kind: 'solo', count: 1, representative: 0, teamName: '', time: '16:00開始でも参加可能', players: [{ name: '架空', xId: 'fictional', platform: 'Steam', otherPlatform: '', gameId: 'Fiction#0000', hours: '10', killer: false, duty: '', favorite: '', killers: [], dif: 'no', dck: 'no', other: 'no', difDetails: history, dckDetails: history, histories: [] }] };
   let tree;
@@ -45,7 +48,7 @@ function mount(reply, { productionMode = true, ready = false, closed = false, se
   const button = label => nodes().find(n => n.type === 'button' && text(n) === label);
   const field = label => nodes().find(n => n.type === 'label' && text(n).startsWith(label)).props.children.find(n => n.type === 'input');
   render();
-  return { render, requests, button, field, draft, nodes, text: () => text(tree), setReady(value) { ready = value; render(); }, blocked: () => blocked, completion: () => completion,
+  return { time(value) { clock = Date.parse(value); tick(); render(); }, render, requests, button, field, draft, nodes, text: () => text(tree), setReady(value) { ready = value; render(); }, blocked: () => blocked, completion: () => completion,
     locked: () => nodes().find(n => n.type === 'fieldset').props.disabled,
     message: () => text(nodes().find(n => n.props?.role === 'status')),
     recover() { field('編集コード').props.onChange({ target: { value: code } }); field('再確認ID').props.onChange({ target: { value: id } }); render(); button('IDとコードで保存結果を確認').props.onClick(); },
@@ -199,4 +202,31 @@ test('既存応募読込後はコードを維持し、更新用IDの保存確認
   ui.setReady(true);
   assert.equal(ui.field('編集コード').props.value, generated);
   assert.equal(ui.button('応募を送信').props.disabled, false);
+});
+
+
+test('追加期間はサバイバーの新規だけ送信可、時計の進行で自動終了する', async () => {
+  const ui = mount(() => committed, { ready: true, now: '2026-10-24T15:00:00Z' });
+  await flush(); ui.render(); ui.prepare();
+  assert.equal(ui.button('応募を送信').props.disabled, false);
+  ui.draft.players[0].killer = true; ui.render();
+  assert.equal(ui.button('応募を送信').props.disabled, true);
+  ui.button('応募を送信').props.onClick();
+  assert.equal(ui.requests.some(r => r.action === 'create'), false);
+  ui.draft.players[0].killer = false; ui.render();
+  assert.equal(ui.button('応募を送信').props.disabled, false);
+  ui.time('2026-10-25T14:59:00Z');
+  assert.equal(ui.button('応募を送信').props.disabled, true);
+});
+
+test('追加期間に既存応募を読み込んでも更新を送信できない', async () => {
+  const ui = mount(() => ({ ...committed, draft: ui.draft }), { ready: true, now: '2026-10-24T15:00:00Z' });
+  await flush(); ui.render();
+  ui.field('編集コード').props.onChange({ target: { value: code } });
+  ui.field('受付番号').props.onChange({ target: { value: committed.receipt } });
+  ui.render(); ui.button('保存済み応募を確認（編集終了）').props.onClick();
+  await flush(); ui.render();
+  assert.equal(ui.button('応募内容を更新').props.disabled, true);
+  ui.button('応募内容を更新').props.onClick();
+  assert.equal(ui.requests.some(r => r.action === 'update'), false);
 });

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { acceptsNewEntry, normalDeadline, entryDeadlineNotice } from '../config/entry-window';
+import { useEntryClock } from '../use-entry-clock';
 import type { Draft } from '../validation';
 import { prepareDraft } from '../storage/prepare-draft';
 import { duplicatesWithin } from '../phase5-duplicates';
@@ -19,9 +21,11 @@ async function call(payload: Record<string, unknown>, googleMode = false, phase5
   return result;
 }
 export default function LocalEntry({ draft, ready, load, block, googleMode = false, phase5Mode = false, productionPreview = false, productionMode = false, appsScriptMode = false, complete, reviewTarget }: Props) {
+  const now = useEntryClock();
   const [code, setCode] = useState(''), [receipt, setReceipt] = useState(''), [recoveryId, setRecoveryId] = useState('');
   const [saved, setSaved] = useState(false), [message, setMessage] = useState(''), [deadline, setDeadline] = useState(''), [fault, setFault] = useState('');
   const [loaded, setLoaded] = useState<{ receipt: string; version: number } | null>(null);
+  const receptionAllowed = !productionMode || (loaded ? now < normalDeadline : acceptsNewEntry(draft, now));
   const [state, setState] = useState<'idle' | 'busy' | 'unknown' | 'done'>('idle');
   const pending = useRef<Record<string, unknown> | null>(null), newId = useRef(''), busy = useRef(false);
   const productionUi = productionPreview || productionMode;
@@ -48,7 +52,7 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
   };
   const download = () => {
     const heading = productionMode ? 'そらふぇす大会エントリー保存票' : productionPreview ? '公開前ローカル確認・正式受付ではありません' : `${googleMode ? 'Google' : phase5Mode ? 'Phase 5ローカル' : 'ローカル'}試験専用・未受付の場合もあります`;
-    const url = URL.createObjectURL(new Blob([`${heading}\n大会：${productionUi ? 'frog-assemble-2026' : 'frog-assemble-2026-test'}\n再確認ID：${recoveryId}\n受付番号：${receipt || '未受領'}\n編集コード：${code}\n`], { type: 'text/plain;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([`${heading}\n大会：${productionUi ? 'frog-assemble-2026' : 'frog-assemble-2026-test'}\n再確認ID：${recoveryId}\n受付番号：${receipt || '未受領'}\n編集コード：${code}\n${productionUi ? entryDeadlineNotice : ''}\n`], { type: 'text/plain;charset=utf-8' }));
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = productionMode ? 'sorafes-entry-receipt.txt' : productionPreview ? 'sorafes-entry-public-preview.txt' : googleMode ? 'sorafes-google-test-recovery.txt' : phase5Mode ? 'sorafes-phase5-local-recovery.txt' : 'sorafes-local-recovery.txt'; anchor.click(); URL.revokeObjectURL(url);
   };
   const run = async (payload: Record<string, unknown>, sending = false) => {
@@ -66,11 +70,11 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
       if (!r.ok) {
         if (recovering || (sending && r.code === 'UNKNOWN')) { unresolved(r.code === 'CLOSED' ? '現在、応募受付は停止しています。' : r.code === 'DENIED' ? '認証できませんでした。保存票のID・コードを確認し、運営へご相談ください。' : ''); return; }
         setState('idle'); block(false); pending.current = null;
-        setMessage(r.code === 'CLOSED' ? '現在、応募受付は停止しています。入力内容は保持されています。' : r.code === 'DENIED' ? '認証できませんでした。受付番号・編集コードを確認してください。' : duplicateMode && r.code === 'DUPLICATE' ? 'このプレイヤーはすでにエントリーされています。保存を保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。' : duplicateMode && r.code === 'POSSIBLE_DUPLICATE' ? '重複の可能性があります。入力内容を確認してください。保存は保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。本人でない場合は運営Xアカウントへご相談ください。' : duplicateMode && r.code === 'PENDING' ? '重複候補の保存処理が未確定です。処理の確認後に再試行してください。' : r.code === 'CONFLICT' ? 'ほかの更新が先に確定しています。応募を読み直してから修正してください。' : r.code === 'BUSY' ? '現在アクセスが集中しています。時間をおいて同じ内容で再試行してください。' : r.code === 'INVALID' ? '送信内容を確認できませんでした。入力内容を見直してください。' : r.code === 'CONFIG' ? '受付設定を確認できません。運営へご連絡ください。' : `操作を完了できませんでした（${r.code}）。`); return;
+        setMessage(r.code === 'CLOSED' ? '受付停止中、またはこの応募形式・担当ロールや編集の受付時間外です。追加募集は1人・2人のサバイバー新規応募のみです。入力内容は保持されています。' : r.code === 'DENIED' ? '認証できませんでした。受付番号・編集コードを確認してください。' : duplicateMode && r.code === 'DUPLICATE' ? 'このプレイヤーはすでにエントリーされています。保存を保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。' : duplicateMode && r.code === 'POSSIBLE_DUPLICATE' ? '重複の可能性があります。入力内容を確認してください。保存は保留しました。自分の既存応募なら受付番号と編集コードで読み込んで編集してください。本人でない場合は運営Xアカウントへご相談ください。' : duplicateMode && r.code === 'PENDING' ? '重複候補の保存処理が未確定です。処理の確認後に再試行してください。' : r.code === 'CONFLICT' ? 'ほかの更新が先に確定しています。応募を読み直してから修正してください。' : r.code === 'BUSY' ? '現在アクセスが集中しています。時間をおいて同じ内容で再試行してください。' : r.code === 'INVALID' ? '送信内容を確認できませんでした。入力内容を見直してください。' : r.code === 'CONFIG' ? '受付設定を確認できません。運営へご連絡ください。' : `操作を完了できませんでした（${r.code}）。`); return;
       }
       setReceipt(String(r.receipt));
       if (r.status === 'pending') { unresolved('保存処理は途中です。'); return; }
-      if (payload.action === 'read') { load(r.draft as Draft); setLoaded({ receipt: String(r.receipt), version: Number(r.version) }); newId.current = crypto.randomUUID(); setRecoveryId(newId.current); setSaved(false); setState('idle'); setMessage('応募を読み込みました。今回の更新用の再確認IDを手元へ保存し、内容を修正してください。'); }
+      if (payload.action === 'read') { load(r.draft as Draft); setLoaded({ receipt: String(r.receipt), version: Number(r.version) }); newId.current = crypto.randomUUID(); setRecoveryId(newId.current); setSaved(false); setState('idle'); setMessage(productionMode && now >= normalDeadline ? '保存済み応募を読み込みました。編集受付は終了しています。' : '応募を読み込みました。今回の更新用の再確認IDを手元へ保存し、内容を修正してください。'); }
       else {
         setState(sending || recovering ? 'done' : 'idle'); setLoaded(null);
         if (productionMode && (sending || recovering)) complete?.({ receipt: String(r.receipt), editCode: String(payload.editCode), recoveryId: String(payload.requestId), updated: payload.action === 'update' || (recovering && Number(r.version) > 1) });
@@ -81,7 +85,7 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
     finally { busy.current = false; }
   };
   const submit = () => {
-    if (!saved || !ready || !code || !recoveryId || !deadline || busy.current || state === 'unknown' || state === 'done') return;
+    if (!receptionAllowed || !saved || !ready || !code || !recoveryId || !deadline || busy.current || state === 'unknown' || state === 'done') return;
     if (duplicatePairs.length) { setMessage('同じフォーム内に重複候補があります。プレイヤー情報を確認してください。'); return; }
     if (!pending.current) {
       try {
@@ -98,21 +102,21 @@ export default function LocalEntry({ draft, ready, load, block, googleMode = fal
   const locked = state === 'busy' || state === 'unknown';
   const renderPanel = (reviewPreparation: boolean) => <section className="details" aria-label={productionUi ? '応募の受付・編集' : googleMode ? 'Phase 4 Google試験' : phase5Mode ? 'Phase 5ローカル試験' : 'Phase 4ローカル試験'}><h2>{reviewPreparation ? '応募後の編集について' : productionUi ? '既に応募済みの方' : <>受付・編集の{googleMode ? 'Google' : phase5Mode ? 'Phase 5ローカル' : 'ローカル'}試験</>}</h2>
     {reviewPreparation && <p>応募後に内容を修正する際に必要です。編集コードと再確認IDを保存してください。</p>}
-    <p>{productionMode ? reviewPreparation ? '保存票をダウンロードするか、コードとIDを手元に控えてから送信してください。' : '新規応募の編集コードは、入力を終えたSTEP 8で生成します。既存応募は受付番号と編集コードで読み込み、締切まで修正できます。' : productionPreview ? '公開時の受付・編集操作を確認するローカル画面です。このプレビューで保存しても正式な応募にはなりません。' : googleMode ? '架空データ専用。Googleの専用試験タブへ保存します。応募一覧はリンクを知っている全員が閲覧でき、試験データは削除しません。認証情報と履歴は別の非公開ファイルへ保存します。正式な応募受付ではありません。' : '架空データ専用。Googleへ送信しません。保存先はサーバーのメモリ内で、サーバー再起動で消えます。正式な応募受付ではありません。'}</p>
-    <p className="hint">{productionUi ? '応募・編集締切' : '試験締切'}：{productionUi ? '2026年10月24日23:59（日本時間）' : deadline ? new Date(deadline).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) + '（日本時間・技術試験用）' : '取得できていません'}{!productionUi && '。本番締切は2026年10月24日23:59（日本時間）です。'}</p>
+    <p>{productionMode ? reviewPreparation ? '保存票をダウンロードするか、コードとIDを手元に控えてから送信してください。' : '新規応募の編集コードは、入力を終えたSTEP 8で生成します。既存応募は受付番号と編集コードで読み込み、10月24日23:59（日本時間）の通常締切まで修正できます。追加募集の応募は編集できません。' : productionPreview ? '公開時の受付・編集操作を確認するローカル画面です。このプレビューで保存しても正式な応募にはなりません。' : googleMode ? '架空データ専用。Googleの専用試験タブへ保存します。応募一覧はリンクを知っている全員が閲覧でき、試験データは削除しません。認証情報と履歴は別の非公開ファイルへ保存します。正式な応募受付ではありません。' : '架空データ専用。Googleへ送信しません。保存先はサーバーのメモリ内で、サーバー再起動で消えます。正式な応募受付ではありません。'}</p>
+    <p className="hint">{productionUi ? '受付期限' : '試験締切'}：{productionUi ? entryDeadlineNotice : deadline ? new Date(deadline).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) + '（日本時間・技術試験用）' : '取得できていません'}{!productionUi && '。本番締切は2026年10月24日23:59（日本時間）です。'}</p>
     <fieldset disabled={locked}><legend>{reviewPreparation ? '送信前の保存確認' : '既存応募の認証／保存結果の確認'}</legend>
       {(!productionUi || (reviewPreparation && !code)) && <button className="secondary" type="button" onClick={generate}>{productionUi ? '新規応募用の編集コードを生成' : '新規試験用コードを生成'}</button>}
       <label className="field"><span>編集コード</span><input autoComplete="off" readOnly={reviewPreparation} value={code} onChange={e => { setCode(e.target.value); setLoaded(null); setSaved(false); }} /></label>
       {!reviewPreparation && <label className="field"><span>受付番号</span><input autoComplete="off" value={receipt} onChange={e => { setReceipt(e.target.value); setLoaded(null); }} placeholder={productionUi ? '応募保存成功後に表示' : '試験保存成功後に表示'} /></label>}
       <label className="field"><span>再確認ID（保存票に記載）</span><input autoComplete="off" readOnly={reviewPreparation} value={recoveryId} onChange={e => setRecoveryId(e.target.value)} /></label>
       <button className="secondary" type="button" disabled={!code} onClick={download}>保存票をダウンロード</button>
-      {!reviewPreparation && <button className="secondary" type="button" disabled={!receipt || !code} onClick={() => { setLoaded(null); void run({ action: 'read', receipt, editCode: code }); }}>応募を読み込んで編集</button>}
+      {!reviewPreparation && <button className="secondary" type="button" disabled={!receipt || !code} onClick={() => { setLoaded(null); void run({ action: 'read', receipt, editCode: code }); }}>{productionMode && now >= normalDeadline ? '保存済み応募を確認（編集終了）' : '応募を読み込んで編集'}</button>}
       {!reviewPreparation && <button className="secondary" type="button" disabled={!recoveryId || !code} onClick={() => { setLoaded(null); void run({ action: 'recover', requestId: recoveryId, editCode: code }); }}>IDとコードで保存結果を確認</button>}
       {(!productionUi || reviewPreparation) && <label className="check"><input type="checkbox" disabled={!code || !recoveryId} checked={saved} onChange={e => setSaved(e.target.checked)} />{productionUi ? '編集コードと再確認IDを手元に保存し、応募情報が運営アカウント限定で保存され、修正前を含め削除されないことを確認しました。' : <>全員の情報が架空で、コードと再確認IDを手元に保存しました。{googleMode && '保存情報を削除しないこと・応募一覧のリンク閲覧も確認しました。'}</>}</label>}
     </fieldset>
     {!googleMode && !productionUi && <label className="field"><span>失敗試験（ローカル専用）</span><select value={fault} disabled={state === 'busy'} onChange={e => setFault(e.target.value)}><option value="">正常</option><option value="auth">準備保存前に失敗</option><option value="history">履歴保存前に失敗</option><option value="shared">共有表示への反映前に失敗</option><option value="commit">確定記録前に失敗</option><option value="response">保存成功後に応答切断</option></select></label>}
     {state === 'unknown' && <button className="primary" type="button" onClick={() => { if (pending.current) void run(pending.current, pending.current.action !== 'recover'); }}>同じ操作を再確認</button>}
-    {ready && (!productionUi || reviewPreparation) && state !== 'unknown' && <><p className="hint">{!deadline ? '現在、送信できません。受付状態を確認してください。' : !code || !recoveryId || !saved ? '編集コードを生成し、編集コードと再確認IDの保存確認にチェックすると送信できます。' : '内容と保存確認が済んだら、下のボタンで送信してください。'}</p><button className="primary" type="button" disabled={!saved || !code || !recoveryId || !deadline || duplicatePairs.length > 0 || state === 'busy' || state === 'done'} onClick={submit}>{productionMode ? loaded ? '応募内容を更新' : '応募を送信' : productionPreview ? loaded ? '応募内容を更新（ローカル確認）' : '応募を送信（ローカル確認）' : loaded ? '試験応募を更新' : googleMode ? 'Googleへ試験応募' : 'ローカルへ試験応募'}</button></>}
+    {ready && (!productionUi || reviewPreparation) && state !== 'unknown' && <><p className="hint">{!receptionAllowed ? 'この応募形式・担当ロールまたは編集の受付は終了しています。追加募集の対象と期限を確認してください。' : !deadline ? '現在、送信できません。受付状態を確認してください。' : !code || !recoveryId || !saved ? '編集コードを生成し、編集コードと再確認IDの保存確認にチェックすると送信できます。' : '内容と保存確認が済んだら、下のボタンで送信してください。'}</p><button className="primary" type="button" disabled={!receptionAllowed || !saved || !code || !recoveryId || !deadline || duplicatePairs.length > 0 || state === 'busy' || state === 'done'} onClick={submit}>{productionMode ? loaded ? '応募内容を更新' : '応募を送信' : productionPreview ? loaded ? '応募内容を更新（ローカル確認）' : '応募を送信（ローカル確認）' : loaded ? '試験応募を更新' : googleMode ? 'Googleへ試験応募' : 'ローカルへ試験応募'}</button></>}
     <button className="secondary" type="button" disabled={locked} onClick={() => { setCode(''); setSaved(false); setLoaded(null); setReceipt(''); setRecoveryId(''); newId.current = ''; pending.current = null; setState('idle'); setMessage('画面内の認証情報を破棄しました。保存済み応募は削除していません。'); }}>編集・認証を終了</button>
     {message && <p role="status">{message}</p>}<p className="hint">{productionMode ? 'コードを紛失した場合は運営Xアカウントへ相談してください。自動再発行は行いません。' : productionPreview ? '公開前のローカル確認のため、この画面から実応募は送信されません。コード紛失時は運営Xアカウントへ相談してください。' : phase5Mode ? '重複チェックは架空データのローカル試験です。実応募の照合・紛失時の再発行には対応しません。' : '重複応募防止・紛失時の再発行は未実装です。'}結果不明の間は入力を変更できません。</p>
   </section>;

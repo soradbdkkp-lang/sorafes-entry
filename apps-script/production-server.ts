@@ -1,10 +1,11 @@
 import { prepareDraft } from '../src/storage/prepare-draft';
 import { duplicatesWithin, duplicateStrengthBetween } from '../src/phase5-duplicates';
+import { normalDeadline, additionalDeadline, acceptsNewEntry } from '../src/config/entry-window';
 
 declare const PropertiesService: any, SpreadsheetApp: any, Utilities: any, LockService: any, ContentService: any, HtmlService: any;
 
 const tournamentId = 'frog-assemble-2026';
-const deadlineUtc = Date.parse('2026-10-24T14:59:00.000Z');
+const deadlineUtc = normalDeadline;
 const eventHeaders = ['記録日時UTC', '処理状態', '受付番号', '認証管理JSON', '操作JSON'];
 const historyHeaders = ['受付番号', '版', '処理ID', '保存日時UTC', '応募原本JSON'];
 const publicHeaders = ['受付番号', '版', '処理ID', '処理状態', '保存日時UTC', '応募原本JSON'];
@@ -64,7 +65,7 @@ export function handleProduction(raw: any): any {
     if (traffic.length >= 200) return { ok: false, code: 'BUSY' };
     traffic.push(Date.now());
     properties.setProperty('PRODUCTION_TRAFFIC', JSON.stringify(traffic));
-    if (raw.action === 'settings') return { ok: true, mode: 'production', tournamentId, deadline: new Date(deadlineUtc).toISOString() };
+    if (raw.action === 'settings') return { ok: true, mode: 'production', tournamentId, deadline: new Date(additionalDeadline).toISOString() };
 
     const code = normalizeCode(raw.editCode);
     if (!/^[A-F0-9]{32}$/.test(code)) return { ok: false, code: 'DENIED' };
@@ -135,7 +136,7 @@ export function handleProduction(raw: any): any {
           if (application.pending) return { ok: false, code: 'PENDING' };
           if (!Number.isInteger(raw.expectedVersion) || raw.expectedVersion !== application.version) return { ok: false, code: 'CONFLICT' };
         }
-        if (Date.now() >= deadlineUtc) return { ok: false, code: 'CLOSED' };
+        if (raw.action === 'update' ? Date.now() >= deadlineUtc : !acceptsNewEntry(draft, Date.now())) return { ok: false, code: 'CLOSED' };
 
         const within = duplicatesWithin(draft);
         if (within.length) return { ok: false, code: within.some(pair => pair.xId && pair.gameId) ? 'DUPLICATE' : 'POSSIBLE_DUPLICATE' };
