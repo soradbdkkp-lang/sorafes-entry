@@ -54,3 +54,13 @@
 本番WorkerのsettingsはHTTP 200、ok:true、Cache-Control:no-store、deadline:2026-10-25T14:59:00.000Zを返した。設定確認に伴うPRODUCTION_TRAFFICの自動更新のみ。応募のcreate/update/read/recoverは実行していない。
 
 GitHub mainは750e3d2、ローカルHEADはe2825f4で、差は既存の管理機能検証の文書commit1件のみ。既存commitを改変せず今回のcommitを積む。今回のcommit・pushとWorkers Buildsによる画面反映は、この記録の次工程。
+
+## 本番反映完了（2026-10-24）
+
+実装commit `f5782fd` をmainへpushした。既存の文書commit e2825f4も親履歴としてpushし、内容を変更していない。既存Workers Buildsによる配信更新を確認し、本番HTMLが参照する `/assets/index-C3K_gMB5.js` はローカルの検証済みdistとバイト単位で一致した。SHA-256は `6091e4c744f746e0967cbd59177bd2932472613093e6f8a4325c74374f73e72c`。
+
+本番ブラウザーで通常締切と追加募集締切、追加募集の編集不可の表示を確認した。現在は通常締切前のため5形式すべてが選択可能。settingsのHTTP 200／ok:true／no-store／追加締切も再確認した。応募の送信・編集・既存応募の読込・recoverは行っていない。
+
+変更ファイルとローカルの99件合格は上記のとおり。残る未検証事項は、本番で実際の日付変更時の切り替え・追加募集対象の実保存・物理スマートフォンの表示である。期間境界・形式・ロール・更新拒否・回復は制御時計のローカルテストで検証済み。日付変更後の状態はまだ実測していない。
+
+本番画面の証跡はGit除外対象 `.cache/additional-recruitment-live.png` に保存し、除外を確認した。期限の表示と保存側を反映済みのため、参加者向けURLは既存の正式サイトを継続使用できる。
