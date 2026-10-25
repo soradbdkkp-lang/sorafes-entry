@@ -2,8 +2,8 @@ import type { Draft } from '../validation';
 
 export const normalDeadline = Date.parse('2026-10-24T14:59:00.000Z');
 export const additionalStart = Date.parse('2026-10-24T15:00:00.000Z');
-export const additionalDeadline = Date.parse('2026-10-25T14:59:00.000Z');
-export const entryDeadlineNotice = '通常応募・編集：2026年10月24日23:59／追加募集（1人・2人のサバイバー新規応募のみ）：10月25日23:59（日本時間）。追加募集の応募は編集できません。';
+export const additionalDeadline = Date.parse('2026-10-25T10:24:58.000Z');
+export const entryDeadlineNotice = '応募受付は終了しました。予定人数に達したため、サバイバー追加募集も締め切りました。';
 
 export function entryWindow(now: number) {
   if (now < normalDeadline) return 'normal';

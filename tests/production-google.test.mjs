@@ -149,7 +149,7 @@ test('本番候補は必須設定と本番モードを確認し、設定不足�
     ok: true,
     mode: 'production',
     tournamentId: 'frog-assemble-2026',
-    deadline: '2026-10-25T14:59:00.000Z',
+    deadline: '2026-10-25T10:24:58.000Z',
   });
   assert.equal(value.raw({ action: 'settings', mode: 'production', tournamentId: 'wrong' }).code, 'INVALID');
   assert.equal(value.handle({ action: 'settings', testOnly: true }).code, 'INVALID');
@@ -245,9 +245,9 @@ test('通常締切・追加開始・追加締切の境界で新規と編集を�
     ['2026-10-24T14:59:00.001Z', false, false],
     ['2026-10-24T14:59:59.999Z', false, false],
     ['2026-10-24T15:00:00.000Z', false, true],
-    ['2026-10-25T14:58:59.999Z', false, true],
-    ['2026-10-25T14:59:00.000Z', false, false],
-    ['2026-10-25T14:59:00.001Z', false, false],
+    ['2026-10-25T10:24:57.999Z', false, true],
+    ['2026-10-25T10:24:58.000Z', false, false],
+    ['2026-10-25T10:24:58.001Z', false, false],
   ]) {
     for (const kind of ['solo', 'duo', 'killer', 'survivors', 'team']) {
       const f = fixture(), initial = request('solo', 1, 100), saved = f.handle(initial);
@@ -294,9 +294,9 @@ test('締切前のprepared・committedは締切後も同一操作で回復でき
 
 test('追加募集で受理したpreparedも追加締切後に回復でき新しい更新は不可', () => {
   const f = fixture(), req = request('duo');
-  f.time('2026-10-25T14:58:59.999Z'); f.fail(2, 'before');
+  f.time('2026-10-25T10:24:57.999Z'); f.fail(2, 'before');
   assert.equal(f.handle(req).code, 'UNKNOWN');
-  f.fail(0); f.time('2026-10-25T14:59:00.000Z');
+  f.fail(0); f.time('2026-10-25T10:24:58.000Z');
   const saved = f.handle(req);
   assert.equal(saved.ok, true);
   assert.equal(f.handle(edit(req, saved)).code, 'CLOSED');

@@ -215,7 +215,7 @@ test('追加期間はサバイバーの新規だけ送信可、時計の進行�
   assert.equal(ui.requests.some(r => r.action === 'create'), false);
   ui.draft.players[0].killer = false; ui.render();
   assert.equal(ui.button('応募を送信').props.disabled, false);
-  ui.time('2026-10-25T14:59:00Z');
+  ui.time('2026-10-25T10:24:58Z');
   assert.equal(ui.button('応募を送信').props.disabled, true);
 });
 
