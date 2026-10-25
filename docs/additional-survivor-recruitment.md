@@ -74,3 +74,11 @@ GitHub mainは750e3d2、ローカルHEADはe2825f4で、差は既存の管理機
 変更対象は共通期間設定、本番UIの終了案内、対応する境界テストと関連文書。既存の本番更新・Git反映の手順で早期終了を反映し、保存結果の確認手段を維持する。現在はローカル変更、検証・本番反映はこの後に記録する。
 
 ローカルの99件のテスト・本番ビルド・Apps Script生成・diff検査が成功した。本番コードが前回の生成物と一致することを確認し、新しい締切の生成物と保存後の全文一致も確認した。既存Webアプリを **バージョン4（2026/10/25 19:28 JST）** へ更新した。19:28以降の本番settingsはHTTP 200、ok:true、no-store、deadline:2026-10-25T10:24:58.000Zを返し、過去の締切で新規応募を拒否するコードが有効になった。配備前に受理された応募を遡って無効にはしない。実応募の送信や既存行の読込・変更は行っていない。UIの配信更新はこの後に確認する。
+
+### 早期終了の本番反映完了
+
+実装commit `2b46fe2` をmainへpushし、本番画面の自動配備を確認した。本番HTMLのJavaScript `/assets/index-D1HPDq_c.js` がローカル検証済みdistとバイト単位で一致（SHA-256: `6876548b19687228c6c3143f85237fdcf730d49b8bc5ed577bbd5b76c40b5ebb`）。ブラウザーで「応募受付は終了しました」「予定人数に達したため、サバイバー追加募集も締め切りました」の表示と、全5形式のradioがdisabledであることを確認。settingsも早期締切を維持している。
+
+保存結果の再確認は継続するため、PRODUCTION_ENABLEDは変更していない。既存応募データや採番の手動変更はなし。本番への応募送信・更新・read・recoverの実行試験は行わず、拒否・回復はローカル99テストで確認した。物理スマートフォン表示は未検証。証跡 `.cache/recruitment-closed-live.png` はGit除外対象。
+
+今回の変更ファイルは `src/config/entry-window.ts`、`src/App.tsx`、`tests/production-google.test.mjs`、`tests/recovery-ui.test.mjs` と本書・README・requirements・production-operations・production-apps-script-setupの5文書。Apps Script生成物は既存ignoreのまま、保存・配備したコードだけを本番へ反映した。
